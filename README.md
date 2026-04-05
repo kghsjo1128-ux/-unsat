@@ -23,9 +23,11 @@ firebase deploy
 
 ```bash
 cd "C:\Users\hohoh\OneDrive\바탕 화면\운사트"
-git remote add origin https://github.com/kghsjo1128-ux/운사트.git
+git remote add origin <GitHub의 Code에서 복사한 HTTPS 주소>
 git push -u origin main
 ```
 
-이미 `origin`이 있으면 `git remote set-url origin https://github.com/kghsjo1128-ux/운사트.git` 후 `git push -u origin main`.  
-**`kghsjo1128-ux`가 본인 깃허브와 다르면** 해당 부분만 바꾸면 된다.
+**한글 저장소 이름(`운사트`)은 주소를 직접 치지 말고**, 저장소 만든 뒤 **Code 버튼으로 복사**하세요.  
+자세한 오류 대응은 [GITHUB-REPO.md](./GITHUB-REPO.md) 하단 참고.
+
+이미 `origin`이 있으면 `git remote set-url origin <복사한주소>` 후 `git push -u origin main`.
