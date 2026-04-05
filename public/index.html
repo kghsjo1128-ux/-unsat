@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>운사트 - 운송 커뮤니티</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="운사트">
+<meta name="theme-color" content="#0f3460">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f5f5f5;margin:0;padding:0;font-family:Arial;min-height:100vh}
+.phone-frame{width:100%;max-width:480px;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;background:#f5f5f5;border-radius:0;box-shadow:none;overflow:hidden;position:relative;display:flex;flex-direction:column;margin:0 auto}
+.notch{display:none}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
+.login-screen{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.login-content{flex:1;overflow-y:auto;padding:20px;scrollbar-width:none}
+.login-content::-webkit-scrollbar{display:none}
+.logo{text-align:center;margin-bottom:20px;padding-top:10px}
+.logo .truck{font-size:55px;display:block;margin-bottom:8px}
+.logo h1{color:#fff;font-size:24px;font-weight:bold}
+.logo p{color:#aaa;font-size:12px;margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.tabs{display:flex;margin-bottom:18px;background:#f5f5f5;border-radius:10px;padding:4px}
+.tab{flex:1;padding:9px;text-align:center;border:none;background:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;color:#888}
+.tab.active{background:#fff;color:#0f3460;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:12px;font-weight:bold;color:#555;margin-bottom:5px}
+.form-group input{width:100%;padding:11px 13px;border:2px solid #eee;border-radius:10px;font-size:14px;outline:none;transition:border .2s}
+.form-group input:focus{border-color:#0f3460}
+.error{color:#e94560;font-size:11px;margin-top:4px;display:none}
+.btn-main{width:100%;padding:13px;background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:5px}
+.btn-main:disabled{opacity:.5;cursor:not-allowed}
+.find-links{display:flex;justify-content:center;margin-top:12px}
+.find-link{background:none;border:none;font-size:11px;color:#aaa;cursor:pointer;padding:4px 10px}
+.find-divider{font-size:11px;color:#ddd;line-height:2}
+.divider{display:flex;align-items:center;gap:10px;margin:15px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#eee}
+.divider span{font-size:11px;color:#bbb;white-space:nowrap}
+.social-btns{display:flex;flex-direction:column;gap:10px}
+.btn-kakao{width:100%;padding:13px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-naver{width:100%;padding:13px;background:#03C75A;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-google{width:100%;padding:13px;background:#fff;color:#333;border:2px solid #eee;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.kakao-icon{background:#3C1E1E;color:#FEE500;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.naver-icon{background:#fff;color:#03C75A;border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+.role-select{display:flex;gap:8px;margin-bottom:13px}
+.role-btn{flex:1;padding:10px 5px;border:2px solid #eee;border-radius:10px;background:#fff;cursor:pointer;text-align:center;font-size:11px;font-weight:bold;color:#888}
+.role-btn.selected{border-color:#0f3460;color:#0f3460;background:#f0f4ff}
+.role-btn .icon{font-size:20px;display:block;margin-bottom:3px}
+.register-form{display:none}
+.consent-area{margin:14px 0 8px;padding:12px;background:#f8f9fb;border-radius:10px;border:1px solid #eee}
+.consent-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.consent-row:last-child{margin-bottom:0}
+.consent-row input[type=checkbox]{width:18px;height:18px;accent-color:#0f3460;cursor:pointer;flex-shrink:0}
+.consent-row label{font-size:11px;color:#555;flex:1;cursor:pointer}
+.consent-row .consent-link{font-size:11px;color:#0f3460;text-decoration:underline;cursor:pointer;white-space:nowrap;background:none;border:none;font-family:inherit;padding:0}
+.consent-all{border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:10px}
+.consent-all label{font-size:12px;font-weight:bold;color:#333}
+.error.consent-err{margin-top:4px;margin-bottom:8px}
+.terms-modal-body{max-height:400px;overflow-y:auto;scrollbar-width:none;font-size:12px;color:#555;line-height:1.8;white-space:pre-line;padding:16px;background:#f8f9fb;border-radius:10px;border:1px solid #eee}
+.success-screen-inner{display:none;text-align:center;padding:10px}
+.success-screen-inner .big-icon{font-size:60px;display:block;margin-bottom:12px}
+.success-screen-inner h3{font-size:20px;color:#0f3460;margin-bottom:6px}
+.success-screen-inner p{color:#888;font-size:13px;margin-bottom:15px}
+.notice-popup-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:150;border-radius:0;justify-content:center;align-items:center;flex-direction:column}
+.notice-popup-overlay.active{display:flex}
+.notice-popup{background:#fff;border-radius:20px;width:320px;max-height:500px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:popupSlideUp .4s ease}
+@keyframes popupSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.notice-popup-header{background:linear-gradient(135deg,#0f3460,#e94560);padding:18px 20px;color:#fff;text-align:center}
+.notice-popup-header h3{font-size:16px;margin-bottom:4px}
+.notice-popup-header p{font-size:11px;opacity:.8}
+.notice-popup-body{padding:18px;max-height:300px;overflow-y:auto;scrollbar-width:none}
+.notice-popup-body::-webkit-scrollbar{display:none}
+.notice-popup-item{padding:10px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:10px;align-items:flex-start}
+.notice-popup-item:last-child{border-bottom:none}
+.notice-popup-item .np-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.notice-popup-item .np-body{flex:1}
+.notice-popup-item .np-title{font-size:13px;font-weight:bold;color:#333}
+.notice-popup-item .np-desc{font-size:11px;color:#888;margin-top:3px;line-height:1.4}
+.notice-popup-item .np-new{background:#e94560;color:#fff;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:bold;margin-left:6px}
+.notice-popup-footer{padding:14px 18px;border-top:1px solid #f0f0f0;display:flex;gap:10px}
+.notice-popup-footer button{flex:1;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer}
+.btn-notice-close{background:#f5f5f5;color:#888}
+.btn-notice-detail{background:linear-gradient(135deg,#0f3460,#e94560);color:#fff}
+.app-screen{background:#f5f5f5}
+.app-header{background:linear-gradient(135deg,#0f3460,#1a1a2e);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-logo{display:flex;align-items:center}
+.header-logo span{font-size:24px}
+.header-logo h2{color:#fff;font-size:16px;font-weight:bold}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-user{color:#fff;font-size:12px;text-align:right}
+.header-user .name{font-weight:bold;font-size:14px}
+.header-bell{position:relative;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.header-bell .bell-dot{position:absolute;top:4px;right:4px;width:10px;height:10px;background:#e94560;border-radius:50%;border:2px solid #0f3460;display:none}
+.header-bell .bell-dot.active{display:block}
+.page-content{flex:1;overflow-y:auto;scrollbar-width:none;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;position:relative}
+.page-content::-webkit-scrollbar{display:none}
+.pull-indicator{position:absolute;top:0;left:50%;transform:translate(-50%,-44px);z-index:25;background:rgba(15,52,96,.95);color:#fff;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:bold;transition:transform .2s ease,opacity .2s ease;opacity:0;pointer-events:none}
+.pull-indicator.show{transform:translate(-50%,10px);opacity:1}
+.page{display:none;padding:15px 15px 84px}
+.page.active{display:block}
+.home-banner{background:linear-gradient(135deg,#0f3460,#e94560);border-radius:16px;padding:20px;color:#fff;margin-bottom:15px}
+.home-banner h3{font-size:16px;margin-bottom:5px}
+.home-banner p{font-size:12px;opacity:.8}
+.home-banner .banner-icon{font-size:40px;float:right;margin-top:-10px}
+.section-title{font-size:14px;font-weight:bold;color:#333;margin-bottom:10px}
+.notice-item{background:#fff;border-radius:12px;padding:12px 15px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.notice-item .nbadge{background:#0f3460;color:#fff;border-radius:6px;padding:3px 8px;font-size:10px;white-space:nowrap}
+.notice-item .ntext{font-size:12px;color:#333;flex:1}
+.notice-item .ntime{font-size:10px;color:#aaa;white-space:nowrap}
+.filter-bar{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.search-box{display:flex;align-items:center;background:#f5f5f5;border-radius:10px;padding:8px 12px;margin-bottom:10px;gap:8px}
+.search-box input{flex:1;border:none;background:none;font-size:13px;outline:none}
+.filter-row{display:flex;gap:8px;margin-bottom:6px}
+.filter-select{flex:1;padding:8px 6px;border:2px solid #eee;border-radius:10px;font-size:11px;outline:none;color:#555;background:#fff;cursor:pointer}
+.filter-result{font-size:11px;color:#888;margin-top:4px}
+.filter-result span{color:#0f3460;font-weight:bold}
+.role-info-banner{border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:8px}
+.role-info-banner.driver-banner{background:#fff3e0;color:#e65100;border:1px solid #ffe0b2}
+.role-info-banner.company-banner{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9}
+.company-my-jobs-section{padding:0 15px 10px}
+.company-my-jobs-hint{font-size:11px;color:#555;line-height:1.5;margin:0 0 10px;padding:10px 12px;background:#f7faf7;border-radius:12px;border:1px solid #dcedc8}
+.company-my-jobs-empty{text-align:center;padding:14px 10px;font-size:12px;color:#999;background:#fafafa;border-radius:12px;border:1px dashed #ddd;line-height:1.45}
+.job-item-mine{border-left:4px solid #0f3460}
+.job-item{background:#fff;border-radius:14px;padding:15px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:transform .1s}
+.job-item:active{transform:scale(.98)}
+.job-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.job-title-text{font-size:14px;font-weight:bold;color:#333;flex:1;margin-right:8px}
+.job-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.job-badge{background:#e8f4ff;color:#0f3460;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:bold}
+.job-badge.company{background:#fff3e0;color:#e65100}
+.job-badge.type-hire{background:#e8f5e9;color:#2e7d32}
+.job-info{font-size:11px;color:#888;margin-bottom:4px}
+.job-pay{font-size:13px;font-weight:bold;color:#e94560;margin-top:6px}
+.tap-hint{font-size:10px;color:#bbb;margin-top:8px;text-align:right}
+.driver-card{background:#fff;border-radius:14px;padding:15px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer}
+.driver-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.driver-avatar{width:44px;height:44px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.driver-name{font-size:14px;font-weight:bold;color:#333}
+.driver-career{font-size:11px;color:#888;margin-top:2px}
+.driver-badge{background:#fce4ec;color:#c62828;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:bold;margin-left:auto;white-space:nowrap}
+.driver-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.driver-tag{background:#f0f4ff;color:#0f3460;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:bold}
+.driver-pay{font-size:13px;font-weight:bold;color:#e94560;margin-bottom:4px}
+.no-result{text-align:center;padding:30px;color:#aaa;font-size:13px;display:none}
+.no-result .no-icon{font-size:40px;display:block;margin-bottom:10px}
+.comm-search-bar{background:#fff;border-radius:14px;padding:10px 12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.comm-search-inner{display:flex;align-items:center;background:#f5f5f5;border-radius:10px;padding:8px 12px;gap:8px;margin-bottom:8px}
+.comm-search-inner input{flex:1;border:none;background:none;font-size:13px;outline:none}
+.comm-filter-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.comm-filter-tabs::-webkit-scrollbar{display:none}
+.comm-ftab{padding:5px 12px;border-radius:20px;border:1px solid #ddd;background:#fff;font-size:11px;font-weight:bold;color:#888;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.comm-ftab.active{background:#0f3460;color:#fff;border-color:#0f3460}
+.post-card{background:#fff;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;cursor:pointer}
+.post-card-body{padding:14px}
+.post-card-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.post-avatar{width:34px;height:34px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:bold;flex-shrink:0}
+.post-author-info{flex:1}
+.post-author-name{font-size:13px;font-weight:bold;color:#333}
+.post-author-meta{font-size:10px;color:#aaa;margin-top:1px}
+.post-category{background:#f0f4ff;color:#0f3460;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:bold}
+.post-card-title{font-size:14px;font-weight:bold;color:#222;margin-bottom:5px}
+.post-card-preview{font-size:12px;color:#666;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post-img-preview{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:10px 0 12px;border-radius:12px;overflow:hidden}
+.post-img-preview::-webkit-scrollbar{display:none}
+.post-img-thumb{min-width:100%;aspect-ratio:1/1;height:clamp(280px,56vh,440px);display:flex;align-items:center;justify-content:center;font-size:60px;background:#000;position:relative;overflow:hidden;scroll-snap-align:start}
+.post-img-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.post-card-footer{display:flex;align-items:center;gap:12px;padding-top:8px;border-top:1px solid #f5f5f5}
+.post-card-footer span{font-size:11px;color:#aaa}
+.post-card-footer .view-count{margin-left:auto}
+.fab{position:absolute;bottom:82px;right:16px;width:52px;height:52px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;border:none;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(15,52,96,.4);display:flex;align-items:center;justify-content:center;z-index:10}
+.cal-header{background:#fff;border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav-btn{background:#f5f5f5;border:none;border-radius:8px;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-nav h3{font-size:15px;font-weight:bold;color:#333}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day-header{text-align:center;font-size:10px;font-weight:bold;color:#888;padding:4px 0}
+.cal-day-header.sun{color:#e94560}
+.cal-day-header.sat{color:#4444ff}
+.cal-day{text-align:center;padding:5px 2px;font-size:11px;border-radius:8px;cursor:pointer;position:relative;min-height:36px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cal-day:hover{background:#f0f4ff}
+.cal-day.today{background:#0f3460;color:#fff;font-weight:bold}
+.cal-day.today:hover{background:#0f3460}
+.cal-day.has-data .dot{width:5px;height:5px;background:#e94560;border-radius:50%}
+.cal-day.today.has-data .dot{background:#FFE082}
+.cal-day.sun{color:#e94560}
+.cal-day.sat{color:#4444ff}
+.cal-day.today.sun,.cal-day.today.sat{color:#fff}
+.month-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.summary-card{background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.summary-card .s-num{font-size:20px;font-weight:bold;color:#0f3460}
+.summary-card .s-label{font-size:10px;color:#888;margin-top:2px}
+.summary-card.highlight .s-num{color:#e94560}
+.salary-calc{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.salary-calc h4{font-size:13px;font-weight:bold;color:#0f3460;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #f0f4ff}
+.calc-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.calc-row label{font-size:12px;color:#555;min-width:80px}
+.calc-input{flex:1;padding:9px 12px;border:2px solid #eee;border-radius:10px;font-size:13px;outline:none;text-align:right}
+.calc-input:focus{border-color:#0f3460}
+.calc-unit{font-size:12px;color:#888;min-width:24px}
+.calc-result{background:linear-gradient(135deg,#0f3460,#e94560);border-radius:12px;padding:16px;text-align:center;margin-top:12px}
+.calc-result .result-label{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:4px}
+.calc-result .result-amount{font-size:24px;font-weight:bold;color:#fff}
+.calc-result .result-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:6px}
+.btn-calc{width:100%;padding:12px;background:#f0f4ff;color:#0f3460;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;margin-top:8px}
+.detail-screen{background:#f5f5f5;position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;z-index:50;border-radius:0;overflow:hidden}
+.detail-screen.active{display:flex}
+.detail-header{background:linear-gradient(135deg,#0f3460,#1a1a2e);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.detail-header-title{color:#fff;font-size:15px;font-weight:bold;flex:1}
+.detail-body{flex:1;overflow-y:auto;scrollbar-width:none}
+.detail-body::-webkit-scrollbar{display:none}
+.detail-hero{background:linear-gradient(135deg,#0f3460,#e94560);padding:24px 20px 30px;color:#fff}
+.detail-hero .company-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:11px;display:inline-block;margin-bottom:10px}
+.detail-hero h2{font-size:20px;font-weight:bold;margin-bottom:8px;line-height:1.3}
+.detail-hero .hero-pay{font-size:22px;font-weight:bold;color:#FFE082}
+.detail-section{background:#fff;margin:12px 15px;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.detail-section h4{font-size:13px;font-weight:bold;color:#0f3460;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #f0f4ff}
+.detail-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.detail-row:last-child{margin-bottom:0}
+.detail-row .dlabel{font-size:11px;color:#888;min-width:60px;padding-top:1px}
+.detail-row .dvalue{font-size:12px;color:#333;font-weight:bold;flex:1;line-height:1.5}
+.detail-desc{font-size:12px;color:#555;line-height:1.7;white-space:pre-line}
+.driver-detail-hero{background:linear-gradient(135deg,#1a1a2e,#0f3460);padding:24px 20px 30px;display:flex;flex-direction:column;align-items:center;color:#fff}
+.driver-detail-avatar{width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:12px;border:3px solid rgba(255,255,255,.3)}
+.driver-detail-name{font-size:20px;font-weight:bold;margin-bottom:4px}
+.driver-detail-sub{font-size:13px;opacity:.7;margin-bottom:10px}
+.driver-status-badge{background:#e94560;border-radius:20px;padding:5px 16px;font-size:12px;font-weight:bold}
+.detail-bottom{background:#fff;padding:14px 15px;display:flex;gap:10px;flex-shrink:0;border-top:1px solid #eee}
+.btn-inquiry{flex:1;padding:14px;background:#f0f4ff;color:#0f3460;border:none;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer}
+.btn-detail-apply{flex:2;padding:14px;background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer}
+.btn-request{flex:1;padding:14px;background:#f0f4ff;color:#0f3460;border:none;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer}
+.btn-call{flex:2;padding:14px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:bold;cursor:pointer}
+.profile-header{background:linear-gradient(135deg,#0f3460,#1a1a2e);border-radius:16px;padding:20px;text-align:center;margin-bottom:15px;color:#fff}
+.profile-avatar-big{width:70px;height:70px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 10px;cursor:pointer;position:relative;overflow:hidden}
+.profile-avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.profile-avatar-big .avatar-edit-hint{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;text-align:center;padding:3px 0;display:none}
+.profile-avatar-big:hover .avatar-edit-hint{display:block}
+.profile-header h3{font-size:18px;margin-bottom:3px}
+.profile-header p{font-size:12px;opacity:.7}
+.profile-badge{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 12px;font-size:11px;margin-top:6px}
+.btn-action-big{width:100%;padding:15px;border:none;border-radius:14px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-action-big.driver-btn{background:linear-gradient(135deg,#e94560,#c0392b);color:#fff;box-shadow:0 4px 15px rgba(233,69,96,.4)}
+.btn-action-big.company-btn{background:linear-gradient(135deg,#0f3460,#1a5276);color:#fff;box-shadow:0 4px 15px rgba(15,52,96,.4)}
+.menu-item{background:#fff;border-radius:12px;padding:14px 15px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.menu-item .micon{font-size:20px}
+.menu-item .mtext{font-size:13px;font-weight:bold;color:#333;flex:1}
+.menu-item .marrow{color:#aaa;font-size:16px}
+.menu-item .mbadge{background:#e94560;color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:bold;min-width:20px;text-align:center}
+.btn-logout-app{width:100%;padding:13px;background:#fff0f0;border:none;border-radius:12px;font-size:14px;font-weight:bold;color:#e94560;cursor:pointer;margin-top:5px}
+.btn-withdraw{width:100%;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:12px;color:#aaa;cursor:pointer;margin-top:8px;text-decoration:underline}
+.apply-tabs{display:flex;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:12px}
+.apply-tab{flex:1;padding:8px;text-align:center;border:none;background:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:bold;color:#888;position:relative}
+.apply-tab.active{background:#fff;color:#0f3460;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.apply-tab .tab-badge{position:absolute;top:2px;right:8px;background:#e94560;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center}
+.apply-tabs.apply-tabs-3 .apply-tab{font-size:11px;padding:8px 4px}
+.apply-tab .tab-badge.tab-badge-muted{background:#0f3460;right:4px}
+.apply-filter-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#e8f4fd;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#0f3460;font-weight:bold}
+.apply-filter-chip-x{border:none;background:transparent;cursor:pointer;font-size:16px;line-height:1;color:#0f3460;padding:4px 8px}
+.apply-card.apply-job-board-card::before{background:#0f3460}
+.apply-card-actions-3{flex-wrap:wrap}
+.apply-card-actions-3 .apply-action-btn{flex:1;min-width:28%;font-size:10px;padding:8px 4px}
+.apply-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;overflow:hidden}
+.apply-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.apply-card.status-waiting::before{background:#f39c12}
+.apply-card.status-accepted::before{background:#27ae60}
+.apply-card.status-rejected::before{background:#e74c3c}
+.apply-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.apply-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.apply-card-icon.company-icon{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)}
+.apply-card-icon.driver-icon{background:linear-gradient(135deg,#e3f2fd,#bbdefb)}
+.apply-card-info{flex:1}
+.apply-card-name{font-size:13px;font-weight:bold;color:#333}
+.apply-card-meta{font-size:11px;color:#888;margin-top:2px}
+.apply-status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:bold;white-space:nowrap}
+.apply-status.waiting{background:#fff3e0;color:#e65100}
+.apply-status.accepted{background:#e8f5e9;color:#2e7d32}
+.apply-status.rejected{background:#fce4ec;color:#c62828}
+.apply-card-detail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.apply-detail-tag{background:#f5f5f5;border-radius:6px;padding:3px 8px;font-size:10px;color:#666}
+.apply-card-time{font-size:10px;color:#bbb}
+.apply-card-actions{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0}
+.apply-action-btn{flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;text-align:center}
+.apply-action-btn.accept{background:#e8f5e9;color:#2e7d32}
+.apply-action-btn.reject{background:#fce4ec;color:#c62828}
+.apply-action-btn.contact{background:#e3f2fd;color:#1565c0}
+.apply-action-btn.edit{background:#fff3e0;color:#e65100;flex:0 1 auto;min-width:72px}
+.apply-action-btn.delete{background:#ffebee;color:#c62828;flex:0 1 auto;min-width:72px}
+.apply-empty{text-align:center;padding:30px 15px;background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.apply-empty .empty-icon{font-size:40px;display:block;margin-bottom:8px}
+.apply-empty p{font-size:12px;color:#aaa}
+.posting-group{margin-bottom:12px}
+.posting-group-header{background:linear-gradient(135deg,#f0f4ff,#e8ecff);border-radius:12px 12px 0 0;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border:1px solid #dde3f0;border-bottom:none}
+.posting-group-title{font-size:13px;font-weight:bold;color:#0f3460}
+.posting-group-count{background:#0f3460;color:#fff;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:bold}
+.posting-group-body{border:1px solid #eee;border-top:none;border-radius:0 0 12px 12px;overflow:hidden}
+.posting-group-body .apply-card{border-radius:0;margin-bottom:0;box-shadow:none;border-bottom:1px solid #f5f5f5}
+.posting-group-body .apply-card:last-child{border-bottom:none}
+.posting-group-body .apply-card::before{width:3px}
+.noti-item{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:background .2s}
+.noti-item.unread{background:#f0f4ff;border-left:3px solid #0f3460}
+.noti-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.noti-icon.noti-apply{background:#e8f5e9}
+.noti-icon.noti-result{background:#fff3e0}
+.noti-icon.noti-accept{background:#e8f5e9}
+.noti-icon.noti-reject{background:#fce4ec}
+.noti-body{flex:1}
+.noti-title{font-size:13px;font-weight:bold;color:#333;margin-bottom:3px}
+.noti-desc{font-size:11px;color:#888;line-height:1.4}
+.noti-time{font-size:10px;color:#bbb;margin-top:4px}
+.noti-empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+.noti-empty .empty-icon{font-size:40px;display:block;margin-bottom:10px}
+.bottom-nav{background:#fff;display:flex;border-top:1px solid #eee;flex-shrink:0;padding-bottom:calc(5px + env(safe-area-inset-bottom));z-index:30}
+.nav-btn{flex:1;padding:8px 4px 4px;text-align:center;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-btn .nicon{font-size:20px}
+.nav-btn .nlabel{font-size:9px;color:#aaa;font-weight:bold}
+.nav-btn.active .nlabel{color:#0f3460}
+.nav-btn.home-nav .nicon{background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-top:-15px;box-shadow:0 4px 12px rgba(15,52,96,.4)}
+.home-bar{display:none}
+.home-bar div{width:100px;height:4px;background:#ddd;border-radius:3px}
+.write-screen,.job-write-screen{background:#fff;position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;z-index:60;border-radius:0;overflow:hidden}
+.write-screen.active,.job-write-screen.active{display:flex}
+.nw-header{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
+.nw-close{background:none;border:none;font-size:20px;cursor:pointer;color:#333;padding:4px}
+.nw-submit{background:#2db400;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:14px;font-weight:bold;cursor:pointer}
+.nw-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none}
+.nw-body::-webkit-scrollbar{display:none}
+.nw-cat{width:100%;padding:14px 16px;border:none;border-bottom:1px solid #f0f0f0;font-size:15px;font-weight:bold;color:#333;background:#fff;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer}
+.nw-title{width:100%;padding:14px 16px;border:none;border-bottom:1px solid #f0f0f0;font-size:16px;color:#333;outline:none;font-weight:500}
+.nw-title::placeholder{color:#bbb}
+.nw-content{width:100%;padding:16px;border:none;outline:none;font-size:15px;color:#333;line-height:1.8;resize:none;flex:1;min-height:300px;font-family:Arial}
+.nw-content::placeholder{color:#bbb}
+.nw-img-area{padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.nw-img-area .write-img-thumb-item{width:60px;height:60px;border-radius:8px;overflow:hidden;position:relative;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:24px;background:#f8f8f8;flex-shrink:0}
+.nw-img-area .write-img-thumb-item img{width:100%;height:100%;object-fit:cover}
+.nw-img-area .write-img-remove{position:absolute;top:-3px;right:-3px;background:#333;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nw-img-area .write-img-add{width:60px;height:60px;border:2px dashed #ddd;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:20px;color:#bbb}
+.nw-img-area .write-img-add p{font-size:8px;color:#bbb;margin-top:2px}
+.nw-img-area .write-video-box{position:relative;width:100%;flex-basis:100%;border-radius:10px;overflow:hidden;background:#000;border:1px solid #eee;margin-bottom:6px}
+.nw-img-area .write-video-box video{width:100%;max-height:220px;display:block;vertical-align:top}
+.nw-img-area .write-video-box .write-img-remove{z-index:2}
+.nw-img-area .write-video-label{display:block;font-size:10px;color:#888;padding:4px 4px 8px}
+.nw-img-area .write-attach-row{display:flex;gap:8px;flex-wrap:wrap;width:100%;flex-basis:100%}
+.feed-img-item.feed-img-video video,.post-img-thumb.post-img-video video,.pdi.post-detail-video video{pointer-events:auto}
+.post-img-thumb.post-img-video video,.pdi.post-detail-video video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.nw-toolbar{display:flex;align-items:center;justify-content:space-around;padding:10px 8px;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fff}
+.nw-tool{background:none;border:none;font-size:22px;cursor:pointer;color:#555;padding:6px 10px;border-radius:8px}
+.nw-tool:active{background:#f5f5f5}
+.write-header{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;flex-shrink:0}
+.btn-write-close{background:none;border:none;font-size:20px;cursor:pointer;color:#555}
+.write-header-title{font-size:16px;font-weight:bold;color:#333;flex:1}
+.btn-write-submit{background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:bold;cursor:pointer}
+.job-write-body{flex:1;overflow-y:auto;scrollbar-width:none}
+.job-write-body::-webkit-scrollbar{display:none}
+.jw-group{margin-bottom:14px;padding:0 16px}
+.jw-group:first-child{padding-top:16px}
+.jw-group label{display:block;font-size:12px;font-weight:bold;color:#555;margin-bottom:6px}
+.jw-group input,.jw-group select,.jw-group textarea{width:100%;padding:11px 13px;border:2px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial}
+.jw-group textarea{height:90px;resize:none}
+.jw-group input:focus,.jw-group select:focus,.jw-group textarea:focus{border-color:#0f3460}
+.modal-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;border-radius:0;justify-content:flex-end;flex-direction:column}
+.modal-overlay.active{display:flex}
+.modal-sheet{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px 30px;max-height:90%;overflow-y:auto;scrollbar-width:none}
+.modal-sheet::-webkit-scrollbar{display:none}
+.modal-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:17px;font-weight:bold;color:#333;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#888;margin-bottom:18px}
+.modal-group{margin-bottom:14px}
+.modal-group label{display:block;font-size:12px;font-weight:bold;color:#555;margin-bottom:6px}
+.modal-group input,.modal-group select,.modal-group textarea{width:100%;padding:11px 13px;border:2px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial}
+.modal-group textarea{height:70px;resize:none}
+.modal-btns{display:flex;gap:10px;margin-top:6px}
+.btn-cancel{flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:10px;font-size:14px;font-weight:bold;color:#888;cursor:pointer}
+.btn-submit{flex:2;padding:13px;background:linear-gradient(135deg,#0f3460,#e94560);border:none;border-radius:10px;font-size:14px;font-weight:bold;color:#fff;cursor:pointer}
+.modal-result{background:#f0f4ff;border-radius:10px;padding:14px;margin-top:10px;display:none}
+.modal-result p{font-size:13px;color:#0f3460;font-weight:bold;text-align:center}
+.count-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.count-box{text-align:center;background:#f5f5f5;border-radius:10px;padding:10px 5px}
+.count-box label{display:block;font-size:10px;color:#888;margin-bottom:6px}
+.count-box input{width:100%;border:2px solid #eee;border-radius:8px;padding:8px 4px;text-align:center;font-size:16px;font-weight:bold;outline:none;background:#fff}
+.count-box input:focus{border-color:#0f3460}
+.withdraw-modal-content{text-align:center;padding:10px 0}
+.withdraw-modal-content .warn-icon{font-size:50px;display:block;margin-bottom:12px}
+.withdraw-modal-content h3{font-size:17px;color:#e94560;margin-bottom:8px}
+.withdraw-modal-content p{font-size:12px;color:#888;line-height:1.6;margin-bottom:4px}
+.btn-withdraw-confirm{flex:2;padding:13px;background:#e94560;border:none;border-radius:10px;font-size:14px;font-weight:bold;color:#fff;cursor:pointer}
+.activity-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.activity-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.activity-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.activity-card-icon.post-icon{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)}
+.activity-card-icon.comment-icon{background:linear-gradient(135deg,#fff3e0,#ffe0b2)}
+.activity-card-info{flex:1}
+.activity-card-title{font-size:13px;font-weight:bold;color:#333}
+.activity-card-meta{font-size:10px;color:#aaa;margin-top:2px}
+.activity-card-preview{font-size:12px;color:#666;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.activity-card-actions{display:flex;gap:8px;padding-top:8px;border-top:1px solid #f0f0f0}
+.activity-action-btn{flex:1;padding:8px;border:none;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;text-align:center}
+.activity-action-btn.edit{background:#f0f4ff;color:#0f3460}
+.activity-action-btn.delete{background:#fce4ec;color:#c62828}
+.activity-action-btn.view{background:#e8f5e9;color:#2e7d32}
+.apply-my-jobs-empty{text-align:center;padding:16px;font-size:12px;color:#999;background:#fafafa;border-radius:12px;border:1px dashed #ddd;margin-bottom:12px}
+.apply-my-job-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #eee}
+.apply-my-job-title{font-size:14px;font-weight:bold;color:#222;margin-bottom:4px}
+.apply-my-job-meta{font-size:11px;color:#888;margin-bottom:4px}
+.apply-my-job-stats{font-size:11px;color:#0f3460}
+.apply-my-job-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0}
+.apply-job-filter-btn{flex:1;min-width:120px;padding:8px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:11px;font-weight:bold;cursor:pointer;color:#555}
+.apply-job-filter-btn.on{background:#e8f5e9;border-color:#a5d6a7;color:#2e7d32}
+.feed-card{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden}
+.feed-header{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.feed-avatar{width:38px;height:38px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:bold;flex-shrink:0}
+.feed-author{flex:1}
+.feed-author-name{font-size:13px;font-weight:bold;color:#333}
+.feed-author-meta{font-size:10px;color:#aaa;margin-top:1px}
+.feed-cat{background:#f0f4ff;color:#0f3460;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:bold}
+.feed-imgs{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:8px 0 0;border-radius:12px;overflow:hidden}
+.feed-imgs::-webkit-scrollbar{display:none}
+.feed-img-item{min-width:100%;aspect-ratio:1/1;height:clamp(300px,62vh,500px);background:#000;display:flex;align-items:center;justify-content:center;font-size:60px;scroll-snap-align:start}
+.feed-img-item img{width:100%;height:100%;object-fit:cover;display:block}
+.feed-body{padding:12px 14px}
+.feed-title{font-size:14px;font-weight:bold;color:#222;margin-bottom:4px}
+.feed-preview{font-size:12px;color:#666;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.feed-actions{display:flex;align-items:center;gap:14px;padding:8px 14px 12px;border-top:1px solid #f5f5f5}
+.feed-action-btn{background:none;border:none;cursor:pointer;font-size:12px;color:#888;display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:8px;transition:all .2s}
+.feed-action-btn.liked{color:#e94560}
+.feed-action-btn:active{transform:scale(.9)}
+.feed-actions .feed-views{margin-left:auto;font-size:10px;color:#bbb}
+.feed-more{text-align:center;padding:10px;font-size:12px;color:#0f3460;font-weight:bold;cursor:pointer}
+.page-content.home-feed-mode{display:flex;flex-direction:column;overflow:hidden}
+.page-content.home-feed-mode .page.active#page-home{display:flex!important;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding:0}
+#page-home .home-feed-static{flex-shrink:0;padding:12px 15px 0;max-height:38vh;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#page-home .home-feed-static::-webkit-scrollbar{display:none}
+#page-home .home-feed-static .home-banner{margin-bottom:12px}
+#page-home .home-feed-static .section-title.home-feed-section-label{margin-bottom:8px}
+.home-feed-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none}
+.home-feed-scroll::-webkit-scrollbar{display:none}
+.home-feed-snap-item{scroll-snap-align:start;scroll-snap-stop:always;box-sizing:border-box;padding:0 12px 8px;flex-shrink:0}
+.home-feed-snap-item .feed-card{height:100%;min-height:0;display:flex;flex-direction:column;margin-bottom:0;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.home-feed-snap-item .feed-imgs{flex:1;min-height:100px;max-height:min(52vh,420px)}
+.home-feed-snap-item .feed-body{flex-shrink:0}
+.home-feed-snap-item .feed-snap-empty-inner{text-align:center;padding:40px 20px;color:#bbb;font-size:13px;display:flex;align-items:center;justify-content:center;height:100%;min-height:180px}
+.home-feed-more-snap{display:flex;align-items:center;justify-content:center;padding:16px}
+.feed-more-block{width:100%;max-width:300px;padding:14px 20px;border-radius:14px;border:none;background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 4px 14px rgba(15,52,96,.35)}
+.feed-more-block:active{transform:scale(.98)}
+.ig-post{background:#fff;margin:0 0 12px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+.ig-header{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.ig-avatar{width:38px;height:38px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:bold;flex-shrink:0}
+.ig-user{flex:1;min-width:0}
+.ig-user .name{font-size:13px;font-weight:bold;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ig-user .meta{font-size:10px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ig-cat{background:#f0f4ff;color:#0f3460;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:bold;flex-shrink:0}
+.ig-media{background:#000}
+.ig-carousel{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.ig-carousel::-webkit-scrollbar{display:none}
+.ig-slide{min-width:100%;height:clamp(360px,75vh,620px);display:flex;align-items:center;justify-content:center;scroll-snap-align:start;background:#000;color:#fff;font-size:40px}
+.ig-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.ig-actions{display:flex;align-items:center;gap:14px;padding:10px 14px}
+.ig-actions .left{display:flex;align-items:center;gap:12px}
+.ig-icon-btn{background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:4px;border-radius:8px}
+.ig-icon-btn:active{transform:scale(.92)}
+.ig-like-count{font-size:12px;color:#111;font-weight:bold;margin-left:auto}
+.ig-caption{padding:0 14px 12px}
+.ig-caption .title{font-size:13px;font-weight:bold;color:#111;margin-bottom:6px;line-height:1.35}
+.ig-caption .text{font-size:12px;color:#444;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ig-stats{display:flex;align-items:center;gap:12px;font-size:11px;color:#888;padding:0 14px 12px}
+.ig-stats span{white-space:nowrap}
+.ig-stats .views{margin-left:auto}
+.home-noti-card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;border-left:3px solid #0f3460;animation:notiSlideIn .3s ease}
+@keyframes notiSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.home-noti-card .hn-icon{font-size:20px;flex-shrink:0}
+.home-noti-card .hn-body{flex:1}
+.home-noti-card .hn-title{font-size:12px;font-weight:bold;color:#333}
+.home-noti-card .hn-desc{font-size:10px;color:#888;margin-top:2px}
+.home-noti-card .hn-time{font-size:9px;color:#bbb;white-space:nowrap}
+.home-noti-card.type-accept{border-left-color:#27ae60}
+.home-noti-card.type-reject{border-left-color:#e74c3c}
+.home-noti-card.type-apply{border-left-color:#f39c12}
+.post-detail-hero{padding:20px;background:#fff;border-bottom:1px solid #f0f0f0}
+.post-detail-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.post-detail-avatar{width:42px;height:42px;background:linear-gradient(135deg,#0f3460,#e94560);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:bold;flex-shrink:0}
+.post-detail-author{flex:1}
+.post-detail-author .pda-name{font-size:14px;font-weight:bold;color:#333}
+.post-detail-author .pda-meta{font-size:11px;color:#aaa;margin-top:2px}
+.post-detail-cat{background:#f0f4ff;color:#0f3460;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:bold}
+.post-detail-title{font-size:18px;font-weight:bold;color:#222;margin-bottom:10px;line-height:1.4}
+.post-detail-content{font-size:13px;color:#555;line-height:1.8;white-space:pre-line}
+.post-detail-imgs{width:100%;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:14px 0 0;border-radius:12px;overflow:hidden}
+.post-detail-imgs::-webkit-scrollbar{display:none}
+.post-detail-imgs .pdi{min-width:100%;aspect-ratio:1/1;height:clamp(360px,75vh,620px);background:#000;display:flex;align-items:center;justify-content:center;font-size:64px;overflow:hidden;scroll-snap-align:start}
+.post-detail-imgs .pdi img{width:100%;height:100%;object-fit:cover;display:block}
+.post-detail-stats{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fafafa}
+.post-detail-stats span{font-size:12px;color:#888}
+.like-btn{background:none;border:none;cursor:pointer;font-size:12px;color:#888;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;transition:all .2s}
+.like-btn.liked{color:#e94560;background:#fce4ec}
+.like-btn:active{transform:scale(.9)}
+.comment-section{padding:14px 20px}
+.comment-section-title{font-size:13px;font-weight:bold;color:#333;margin-bottom:12px}
+.comment-item{display:flex;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f5f5f5}
+.comment-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.comment-avatar{width:30px;height:30px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:bold;flex-shrink:0}
+.comment-body{flex:1}
+.comment-author{font-size:12px;font-weight:bold;color:#333}
+.comment-time{font-size:10px;color:#bbb;margin-left:6px;font-weight:normal}
+.comment-text{font-size:12px;color:#555;margin-top:4px;line-height:1.5}
+.comment-input-bar{background:#fff;padding:10px 16px;display:flex;gap:8px;border-top:1px solid #eee;flex-shrink:0}
+.comment-input{flex:1;padding:10px 14px;border:2px solid #eee;border-radius:20px;font-size:13px;outline:none;font-family:Arial}
+.comment-input:focus{border-color:#0f3460}
+.comment-send{background:linear-gradient(135deg,#0f3460,#e94560);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.splash-screen{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;border-radius:0;transition:opacity .8s ease,transform .8s ease}
+.splash-screen.fade-out{opacity:0;transform:scale(1.05)}
+.splash-title{color:#fff;font-size:28px;font-weight:bold;margin-top:16px;opacity:0;animation:splashFadeUp .6s ease .3s forwards}
+.splash-sub{color:rgba(255,255,255,.6);font-size:13px;margin-top:8px;opacity:0;animation:splashFadeUp .6s ease .5s forwards}
+.splash-loader{margin-top:30px;width:44px;height:44px;border:4px solid rgba(255,255,255,.15);border-top-color:#FFC107;border-radius:50%;animation:splashSpin 1s linear infinite}
+@keyframes splashFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes splashSpin{to{transform:rotate(360deg)}}
+.toast{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200}
+.toast.show{opacity:1}
+.pwa-install-banner{display:none;position:absolute;bottom:70px;left:15px;right:15px;background:linear-gradient(135deg,#0f3460,#1a1a2e);border-radius:16px;padding:16px;color:#fff;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideUp .4s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.pwa-install-banner.show{display:block}
+.pwa-install-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.pwa-install-top .pwa-icon{font-size:32px}
+.pwa-install-top h4{font-size:14px;font-weight:bold}
+.pwa-install-top p{font-size:11px;opacity:.7;margin-top:2px}
+.pwa-install-btns{display:flex;gap:8px}
+.pwa-install-btns .btn-install{flex:2;padding:10px;background:linear-gradient(135deg,#e94560,#c0392b);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer}
+.pwa-install-btns .btn-later{flex:1;padding:10px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;font-size:12px;cursor:pointer}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<!-- Kakao login disabled (Firebase Rules require Firebase Auth) -->
+
+</head>
+<body>
+<div class="phone-frame">
+<div class="notch"></div>
+
+<!-- 스플래시 -->
+<div class="splash-screen" id="splash-screen">
+    <img src="/logo.png" style="width:80px;height:80px;border-radius:16px;animation:splashFadeUp .6s ease .1s forwards;opacity:0"><div class="splash-title" style="animation-delay:0s;opacity:1">운사트</div>
+    <div class="splash-sub">도로 위의 모든 영웅들, 여기 모여라! 🔥</div>
+    <div class="splash-loader"></div>
+</div>
+
+<!-- 로그인 -->
+<div class="screen login-screen" id="screen-login">
+<div class="login-content">
+    <div class="logo"><img src="/logo.png" style="width:70px;height:70px;border-radius:14px;margin-bottom:8px"><h1>운사트</h1><p>도로 위의 모든 영웅들, 여기 모여라! 🔥</p></div>
+    <div class="card">
+        <div class="tabs"><button class="tab active" onclick="switchTab('login')">로그인</button><button class="tab" onclick="switchTab('register')">회원가입</button></div>
+        <div class="login-form">
+            <div class="form-group"><label>📧 이메일</label><input type="text" id="login-id" placeholder="이메일 입력"><p class="error" id="login-id-err">이메일을 입력해주세요</p></div>
+            <div class="form-group"><label>🔒 비밀번호</label><input type="password" id="login-pw" placeholder="비밀번호 입력"><p class="error" id="login-pw-err">비밀번호를 입력해주세요</p></div>
+            <p class="error" id="login-fail-err" style="margin-bottom:10px">이메일 또는 비밀번호가 틀렸어요</p>
+            <button class="btn-main" id="btn-login" onclick="doLogin()">로그인</button>
+            <div class="find-links"><button class="find-link" onclick="openModal('find-id')">아이디 찾기</button><span class="find-divider">|</span><button class="find-link" onclick="doFindPw()">비밀번호 찾기</button></div>
+            <div class="divider"><span>간편 로그인</span></div>
+            <div class="social-btns">
+                <button class="btn-google" onclick="googleLogin()">🔵 Google로 로그인</button>
+                <!-- <button class="btn-kakao" onclick="kakaoLogin()"><span class="kakao-icon">💬</span>카카오톡으로 로그인</button> -->
+            </div>
+        </div>
+        <div class="register-form">
+            <label style="font-size:12px;font-weight:bold;color:#555;display:block;margin-bottom:8px">👤 회원 유형 선택</label>
+            <div class="role-select">
+                <div class="role-btn selected" onclick="selectRole(this,'화물기사')"><span class="icon">🚛</span>화물기사</div>
+                <div class="role-btn" onclick="selectRole(this,'운송회사')"><span class="icon">🏢</span>운송회사</div>
+            </div>
+            <div class="form-group"><label>👤 이름 / 회사명</label><input type="text" id="reg-name" placeholder="이름 또는 회사명"><p class="error" id="reg-name-err">이름을 입력해주세요</p></div>
+            <div class="form-group"><label>📧 이메일</label><input type="email" id="reg-email" placeholder="이메일 입력"><p class="error" id="reg-email-err">이메일을 입력해주세요</p></div>
+            <div class="form-group"><label>🔒 비밀번호</label><input type="password" id="reg-pw" placeholder="영문 대/소문자+숫자+특수문자 포함 (8자 이상)"><p class="error" id="reg-pw-err">비밀번호는 8자 이상이며, 영문 대/소문자/숫자/특수문자를 모두 포함해야 해요</p></div>
+            <div class="form-group"><label>🔒 비밀번호 확인</label><input type="password" id="reg-pw2" placeholder="비밀번호 재입력"><p class="error" id="reg-pw2-err">비밀번호가 일치하지 않아요</p></div>
+            <p class="error" id="reg-dup-err" style="margin-bottom:10px">이미 가입된 이메일이에요</p>
+            <div class="consent-area">
+                <div class="consent-row consent-all"><input type="checkbox" id="consent-all" onchange="toggleAllConsent()"><label for="consent-all">전체 동의합니다</label></div>
+                <div class="consent-row"><input type="checkbox" id="consent-terms" onchange="updateConsentAll()"><label for="consent-terms">[필수] 이용약관 동의</label><button class="consent-link" onclick="openTermsModal('terms')">보기</button></div>
+                <div class="consent-row"><input type="checkbox" id="consent-privacy" onchange="updateConsentAll()"><label for="consent-privacy">[필수] 개인정보 수집·이용 동의</label><button class="consent-link" onclick="openTermsModal('privacy')">보기</button></div>
+                <div class="consent-row"><input type="checkbox" id="consent-marketing" onchange="updateConsentAll()"><label for="consent-marketing">[선택] 마케팅 정보 수신 동의</label><button class="consent-link" onclick="openTermsModal('marketing')">보기</button></div>
+            </div>
+            <p class="error" id="reg-consent-err" style="margin-bottom:10px">필수 약관에 동의해주세요</p>
+            <button class="btn-main" id="btn-register" onclick="doRegister()">가입하기</button>
+        </div>
+        <div class="success-screen-inner" id="success-inner"><span class="big-icon" id="success-icon">🎉</span><h3 id="success-title">환영합니다!</h3><p id="success-desc"></p><button class="btn-main" onclick="goToApp()">앱 시작하기 🚛</button></div>
+    </div>
+</div>
+</div>
+
+<!-- 앱 메인 -->
+<div class="screen app-screen" id="screen-app">
+<div class="app-header">
+    <div class="header-logo"><img src="/logo-small.png" style="width:28px;height:28px;border-radius:6px"><h2 style="color:#fff;font-size:16px;margin-left:8px">운사트</h2></div>
+    <div class="header-right">
+        <button class="header-bell" onclick="goPage('notification')">🔔<span class="bell-dot" id="bell-dot"></span></button>
+        <div class="header-user"><div class="name" id="header-name">홍길동님</div><div id="header-role">화물기사</div></div>
+    </div>
+</div>
+<div class="pull-indicator" id="pull-indicator">↓ 아래로 당겨서 새로고침</div>
+<div class="page-content" id="page-content">
+        <div class="page active" id="page-home">
+        <div class="home-feed-static">
+        <div class="home-banner"><span class="banner-icon">🚛</span><h3>오늘도 안전 운행하세요!</h3><p>새로운 공고가 등록되었어요</p></div>
+        <div id="home-noti-section" style="display:none"><p class="section-title">🔔 새 알림</p><div id="home-noti-list"></div></div>
+        <p class="section-title">📢 최근 공지</p>
+        <div class="notice-item" onclick="showNoticePopup()"><span class="nbadge">공지</span><span class="ntext">서비스 이용약관 업데이트</span><span class="ntime">방금</span></div>
+        <div class="notice-item" onclick="showNoticePopup()"><span class="nbadge">구인</span><span class="ntext">서울→부산 냉동화물 기사 구합니다</span><span class="ntime">5분전</span></div>
+        <p class="section-title home-feed-section-label" style="margin-top:12px">📰 피드 · 위아래로 넘겨보세요</p>
+        </div>
+        <div class="home-feed-scroll" id="home-feed-scroll"><div id="home-feed"></div></div>
+    </div>
+    <div class="page" id="page-job">
+        <div id="job-driver-view" style="display:none">
+            <div class="role-info-banner driver-banner">🚛 <span>운송회사가 올린 <b>구인 공고</b>를 확인하세요!</span></div>
+            <div class="filter-bar"><div class="search-box"><span>🔍</span><input type="text" id="d-search" placeholder="지역, 회사명 검색..." oninput="filterDriver()"></div>
+                <div class="filter-row"><select class="filter-select" id="d-filter-region" onchange="filterDriver()"><option value="">📍 전체 지역</option><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>대구</option><option>전국</option></select><select class="filter-select" id="d-filter-company" onchange="filterDriver()"><option value="">🚚 전체 택배사</option><option>CJ대한통운</option><option>한진택배</option><option>롯데택배</option><option>쿠팡로지스틱스</option><option>용차</option><option>기타 운송사</option></select></div>
+                <p class="filter-result">구인 공고 <span id="d-result-count">0</span>건</p>
+            </div>
+            <div id="driver-job-list"></div>
+            <div class="no-result" id="d-no-result"><span class="no-icon">📋</span>아직 등록된 구인 공고가 없어요</div>
+        </div>
+        <div id="job-company-view" style="display:none">
+            <div class="role-info-banner company-banner">🏢 <span>구직 중인 <b>기사님 프로필</b>을 확인하세요!</span></div>
+            <div class="company-my-jobs-section">
+                <p class="section-title" style="margin-bottom:6px">📋 내가 올린 구인 공고</p>
+                <p class="company-my-jobs-hint">위 목록에 방금 등록한 공고가 보여요. 같은 공고는 <b>기사 계정 → 구인/구직 탭의 구인 목록</b>에도 나옵니다. 아래 필터 아래는 <b>구직 중인 기사</b>예요.</p>
+                <div id="company-my-job-list"></div>
+            </div>
+            <div class="filter-bar"><div class="search-box"><span>🔍</span><input type="text" id="c-search" placeholder="차량, 경력, 지역 검색..." oninput="filterCompany()"></div>
+                <div class="filter-row"><select class="filter-select" id="c-filter-region" onchange="filterCompany()"><option value="">📍 전체 지역</option><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>전국</option></select><select class="filter-select" id="c-filter-car" onchange="filterCompany()"><option value="">🚛 전체 차종</option><option>1톤</option><option>5톤</option><option>냉동탑차</option><option>윙바디</option></select></div>
+                <p class="filter-result">구직 기사 <span id="c-result-count">0</span>명</p>
+            </div>
+            <div id="company-driver-list"></div>
+            <div class="no-result" id="c-no-result"><span class="no-icon">👤</span>아직 등록된 구직 프로필이 없어요</div>
+        </div>
+    </div>
+    <div class="page" id="page-community" style="padding:0;position:relative;height:100%">
+        <div style="padding:12px 15px 0">
+            <div class="comm-search-bar"><div class="comm-search-inner"><span style="color:#aaa;font-size:16px">🔍</span><input type="text" id="comm-search" placeholder="게시글 검색..." oninput="filterPosts()"></div>
+                <div class="comm-filter-tabs"><button class="comm-ftab active" onclick="setCat('전체')">전체</button><button class="comm-ftab" onclick="setCat('정보공유')">📢 정보공유</button><button class="comm-ftab" onclick="setCat('긴급화물')">🚨 긴급화물</button><button class="comm-ftab" onclick="setCat('질문')">❓ 질문</button><button class="comm-ftab" onclick="setCat('자유')">😄 자유</button><button class="comm-ftab" onclick="setCat('사고제보')">⚠️ 사고제보</button></div>
+            </div>
+        </div>
+        <div id="post-list" style="padding:0 15px 80px;overflow-y:auto;max-height:calc(100% - 110px);scrollbar-width:none"></div>
+        <button class="fab" onclick="openWrite()">✏️</button>
+    </div>
+    <div class="page" id="page-schedule">
+        <div class="cal-header"><div class="cal-nav"><button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button><h3 id="cal-title">2026년 3월</h3><button class="cal-nav-btn" onclick="changeMonth(1)">›</button></div><div class="cal-grid" id="cal-grid"></div></div>
+        <p class="section-title">📊 이번 달 요약</p>
+        <div class="month-summary"><div class="summary-card"><div class="s-num" id="sum-delivery">0</div><div class="s-label">📦 배송건수</div></div><div class="summary-card"><div class="s-num" id="sum-return">0</div><div class="s-label">↩️ 반품건수</div></div><div class="summary-card highlight"><div class="s-num" id="sum-other">0</div><div class="s-label">📋 기타건수</div></div></div>
+        <p class="section-title">💰 예상 급여 계산기</p>
+        <div class="salary-calc"><h4>💰 이번 달 예상 급여</h4><div class="calc-row"><label>배송 단가</label><input class="calc-input" type="number" id="calc-delivery-price" value="0"><span class="calc-unit">원</span></div><div class="calc-row"><label>반품 단가</label><input class="calc-input" type="number" id="calc-return-price" value="0"><span class="calc-unit">원</span></div><div class="calc-row"><label>기타 단가</label><input class="calc-input" type="number" id="calc-other-price" value="0"><span class="calc-unit">원</span></div><button class="btn-calc" onclick="calcSalary()">🧮 계산하기</button><div class="calc-result" id="calc-result" style="display:none"><div class="result-label">이번 달 예상 급여</div><div class="result-amount" id="calc-amount">0원</div><div class="result-sub" id="calc-breakdown"></div></div></div>
+    </div>
+    <div class="page" id="page-notification"><p class="section-title">🔔 알림</p><div id="noti-list"></div></div>
+    <div class="page" id="page-myinfo">
+        <div class="profile-header"><div class="profile-avatar-big" id="profile-avatar" onclick="$('avatar-upload').click()">🚛<span class="avatar-edit-hint">사진변경</span></div><input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(event)"><h3 id="profile-name">홍길동</h3><p id="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="97e2e4f2e5d7f2faf6fefbb9f4f8fa">[email&#160;protected]</a></p><span class="profile-badge" id="profile-role">화물기사</span></div>
+        <button class="btn-action-big driver-btn" id="btn-driver-action" onclick="openJobWrite('driver')" style="display:none">🙋 구직 신청하기</button>
+        <button class="btn-action-big company-btn" id="btn-company-action" onclick="openJobWrite('company')" style="display:none">📢 구인 공고 등록하기</button>
+        <div class="menu-item" id="menu-apply-status" onclick="goPage('apply-status')" style="display:none"><span class="micon">📋</span><span class="mtext" id="menu-apply-text">지원 현황</span><span class="mbadge" id="menu-apply-badge" style="display:none">0</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="goPage('my-activity')"><span class="micon">📝</span><span class="mtext">내 활동 관리</span><span class="mbadge" id="menu-activity-badge" style="display:none">0</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="openModal('edit-profile')"><span class="micon">✏️</span><span class="mtext">프로필 수정</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="goPage('notification')"><span class="micon">🔔</span><span class="mtext">알림</span><span class="mbadge" id="menu-noti-badge" style="display:none">0</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="openModal('change-pw')"><span class="micon">🔒</span><span class="mtext">비밀번호 변경</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="openTermsModal('terms')"><span class="micon">📄</span><span class="mtext">이용약관</span><span class="marrow">›</span></div>
+        <div class="menu-item" onclick="openTermsModal('privacy')"><span class="micon">🔐</span><span class="mtext">개인정보처리방침</span><span class="marrow">›</span></div>
+        <div class="menu-item"><span class="micon">📞</span><span class="mtext">고객센터</span><span class="marrow">›</span></div>
+        <button class="btn-logout-app" onclick="doLogout()">🚪 로그아웃</button>
+        <button class="btn-withdraw" onclick="openModal('withdraw')">회원 탈퇴</button>
+    </div>
+    <div class="page" id="page-apply-status"><div id="apply-status-content"></div></div>
+    <div class="page" id="page-my-activity"><p class="section-title">📝 내 활동 관리</p><div class="apply-tabs" id="activity-tabs"><button class="apply-tab active" onclick="setActivityTab('posts')">내 게시글</button><button class="apply-tab" onclick="setActivityTab('comments')">내 댓글</button></div><div id="my-activity-content"></div></div>
+</div>
+<div class="bottom-nav">
+    <button class="nav-btn" onclick="goPage('community')"><span class="nicon">💬</span><span class="nlabel">커뮤니티</span></button>
+    <button class="nav-btn" onclick="goPage('job')"><span class="nicon">💼</span><span class="nlabel">구인/구직</span></button>
+    <button class="nav-btn home-nav active" onclick="goPage('home')"><span class="nicon">🏠</span><span class="nlabel">홈</span></button>
+    <button class="nav-btn" onclick="goPage('schedule')"><span class="nicon">📅</span><span class="nlabel">스케줄러</span></button>
+    <button class="nav-btn" onclick="goPage('myinfo')"><span class="nicon">👤</span><span class="nlabel">내정보</span></button>
+</div>
+<div class="home-bar"><div></div></div>
+</div>
+
+<!-- 상세 화면들 -->
+<div class="detail-screen" id="detail-job"><div class="detail-header"><button class="btn-back" onclick="closeDetail('job')">←</button><span class="detail-header-title">공고 상세</span></div><div class="detail-body"><div class="detail-hero"><span class="company-badge" id="dj-company"></span><h2 id="dj-title"></h2><div class="hero-pay" id="dj-pay"></div></div><div class="detail-section"><h4>📋 모집 정보</h4><div class="detail-row"><span class="dlabel">📍 지역</span><span class="dvalue" id="dj-region"></span></div><div class="detail-row"><span class="dlabel">🚛 차량</span><span class="dvalue" id="dj-car"></span></div><div class="detail-row"><span class="dlabel">👤 경력</span><span class="dvalue" id="dj-career"></span></div><div class="detail-row"><span class="dlabel">📅 근무일</span><span class="dvalue" id="dj-workday"></span></div><div class="detail-row"><span class="dlabel">💰 급여</span><span class="dvalue" id="dj-salary"></span></div></div><div class="detail-section"><h4>📝 상세 내용</h4><p class="detail-desc" id="dj-desc"></p></div><div class="detail-section"><h4>🏢 회사 정보</h4><div class="detail-row"><span class="dlabel">회사명</span><span class="dvalue" id="dj-companyname"></span></div><div class="detail-row"><span class="dlabel">연락처</span><span class="dvalue" id="dj-contact"></span></div></div><div style="height:90px"></div></div><div class="detail-bottom"><button class="btn-inquiry" onclick="showToast('💬 문의가 전달됐어요!')">💬 문의하기</button><button class="btn-detail-apply" id="btn-apply-job" onclick="applyJob()">🙋 지원하기</button></div></div>
+
+<div class="detail-screen" id="detail-driver"><div class="detail-header"><button class="btn-back" onclick="closeDetail('driver')">←</button><span class="detail-header-title">기사 프로필</span></div><div class="detail-body"><div class="driver-detail-hero"><div class="driver-detail-avatar" id="dd-avatar">🚛</div><div class="driver-detail-name" id="dd-name"></div><div class="driver-detail-sub" id="dd-sub"></div><span class="driver-status-badge">🟢 구직중</span></div><div class="detail-section"><h4>🚛 운행 정보</h4><div class="detail-row"><span class="dlabel">차량 종류</span><span class="dvalue" id="dd-car"></span></div><div class="detail-row"><span class="dlabel">경력</span><span class="dvalue" id="dd-career"></span></div><div class="detail-row"><span class="dlabel">운행 지역</span><span class="dvalue" id="dd-region"></span></div><div class="detail-row"><span class="dlabel">희망 근무</span><span class="dvalue" id="dd-workday"></span></div><div class="detail-row"><span class="dlabel">희망 급여</span><span class="dvalue" id="dd-pay"></span></div></div><div class="detail-section"><h4>📝 자기소개</h4><p class="detail-desc" id="dd-intro"></p></div><div style="height:90px"></div></div><div class="detail-bottom"><button class="btn-request" onclick="requestDriver()">📨 지원요청</button><button class="btn-call" onclick="showToast('📞 연락처가 공개됐어요!')">📞 연락하기</button></div></div>
+
+<!-- 글쓰기 -->
+<div class="write-screen" id="write-screen"><div class="nw-header"><button class="nw-close" onclick="closeWrite()">✕</button><div style="flex:1"></div><button class="nw-submit" id="write-submit-btn" onclick="submitPost()">등록</button></div><div class="nw-body"><select class="nw-cat" id="write-cat"><option value="정보공유">📢 정보공유</option><option value="긴급화물">🚨 긴급화물</option><option value="질문">❓ 질문</option><option value="자유">😄 자유</option><option value="사고제보">⚠️ 사고제보</option></select><input class="nw-title" type="text" id="write-title" placeholder="제목"><textarea class="nw-content" id="write-content" placeholder="내용을 입력하세요."></textarea><div class="nw-img-area" id="write-img-list"></div></div><input type="file" id="real-img-upload" accept="image/*" multiple style="display:none" onchange="handleImgUpload(event)"><input type="file" id="real-video-upload" accept="video/mp4,video/webm,video/quicktime,video/*" style="display:none" onchange="handleCommunityVideoUpload(event)"><div class="nw-toolbar"><button type="button" class="nw-tool" onclick="$('real-img-upload').click()" title="사진">📷</button><button type="button" class="nw-tool" onclick="$('real-video-upload').click()" title="동영상(최대 30초)">🎬</button><button type="button" class="nw-tool">😊</button><button type="button" class="nw-tool">🏷️</button><button type="button" class="nw-tool">🔗</button></div></div>
+
+<!-- 구인/구직 등록 -->
+<div class="job-write-screen" id="job-write-screen"><div class="write-header"><button class="btn-write-close" onclick="closeJobWrite()">✕</button><span class="write-header-title" id="job-write-title">구직 신청하기</span><button class="btn-write-submit" onclick="submitJobPost()">등록</button></div><div class="job-write-body" id="job-write-body"></div></div>
+
+<!-- 모달들 -->
+<div class="modal-overlay" id="modal-day-record"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title" id="day-record-title">📅 기록</p><p class="modal-sub">배송 건수를 입력해주세요</p><div class="count-row"><div class="count-box"><label>📦 배송</label><input type="number" id="input-delivery" placeholder="0" min="0"></div><div class="count-box"><label>↩️ 반품</label><input type="number" id="input-return" placeholder="0" min="0"></div><div class="count-box"><label>📋 기타</label><input type="number" id="input-other" placeholder="0" min="0"></div></div><div class="count-row" style="margin-top:-6px"><div class="count-box"><label>⛽ 기름값</label><input type="number" id="input-fuel" placeholder="0" min="0"></div><div class="count-box"><label>🧴 소모품</label><input type="number" id="input-supplies" placeholder="0" min="0"></div><div class="count-box"><label>🧾 기타 잡비</label><input type="number" id="input-misc" placeholder="0" min="0"></div></div><div class="modal-group"><label>📝 메모 (선택)</label><textarea id="input-memo" placeholder="오늘 특이사항을 기록하세요"></textarea></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('day-record')">취소</button><button class="btn-submit" onclick="saveDayRecord()">✅ 저장</button></div></div></div>
+<div class="modal-overlay" id="modal-find-id"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title">🔍 아이디 찾기</p><div class="modal-group"><label>이름</label><input type="text" id="find-id-name" placeholder="이름 입력"></div><div class="modal-group"><label>전화번호</label><input type="text" id="find-id-phone" placeholder="010-0000-0000"></div><div class="modal-result" id="find-id-result"><p id="find-id-result-text"></p></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('find-id')">닫기</button><button class="btn-submit" onclick="doFindId()">🔍 찾기</button></div></div></div>
+<div class="modal-overlay" id="modal-find-pw"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title">🔒 비밀번호 찾기</p><div class="modal-group"><label>이메일</label><input type="email" id="find-pw-email" placeholder="가입한 이메일 입력"></div><div class="modal-result" id="find-pw-result"><p id="find-pw-result-text"></p></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('find-pw')">닫기</button><button class="btn-submit" onclick="sendPasswordReset()">📨 재설정 링크 보내기</button></div></div></div>
+<div class="detail-screen" id="detail-post"><div class="detail-header"><button class="btn-back" onclick="closeDetail('post')">←</button><span class="detail-header-title">게시글</span></div><div class="detail-body" id="post-detail-body"></div><div class="comment-input-bar"><input class="comment-input" type="text" id="comment-input" placeholder="댓글을 입력하세요..." onkeydown="if(event.key==='Enter')submitComment()"><button class="comment-send" onclick="submitComment()">➤</button></div></div>
+<div class="modal-overlay" id="modal-edit-comment"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title">✏️ 댓글 수정</p><div class="modal-group"><label>댓글 내용</label><textarea id="edit-comment-text" placeholder="댓글 내용" style="height:80px"></textarea></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('edit-comment')">취소</button><button class="btn-submit" onclick="saveEditComment()">✅ 저장</button></div></div></div>
+<div class="modal-overlay" id="modal-delete-confirm"><div class="modal-sheet"><div class="modal-handle"></div><div class="withdraw-modal-content"><span class="warn-icon">🗑️</span><h3 id="delete-confirm-title">삭제하시겠어요?</h3><p id="delete-confirm-desc">삭제하면 복구할 수 없습니다.</p></div><div class="modal-btns" style="margin-top:16px"><button class="btn-cancel" onclick="closeModal('delete-confirm')">취소</button><button class="btn-withdraw-confirm" onclick="confirmDelete()">🗑️ 삭제하기</button></div></div></div>
+<div class="modal-overlay" id="modal-edit-profile"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title">✏️ 프로필 수정</p><div class="modal-group"><label>👤 이름</label><input type="text" id="edit-name" placeholder="이름"></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('edit-profile')">취소</button><button class="btn-submit" onclick="saveProfile()">✅ 저장</button></div></div></div>
+<div class="modal-overlay" id="modal-change-pw"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title">🔒 비밀번호 변경</p><div class="modal-group"><label>현재 비밀번호</label><input type="password" id="pw-current" placeholder="현재 비밀번호"></div><div class="modal-group"><label>새 비밀번호</label><input type="password" id="pw-new" placeholder="영문 대/소문자+숫자+특수문자 포함 (8자 이상)"></div><div class="modal-group"><label>새 비밀번호 확인</label><input type="password" id="pw-new2" placeholder="재입력"></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('change-pw')">취소</button><button class="btn-submit" onclick="changePassword()">🔒 변경하기</button></div></div></div>
+<div class="modal-overlay" id="modal-withdraw"><div class="modal-sheet"><div class="modal-handle"></div><div class="withdraw-modal-content"><span class="warn-icon">⚠️</span><h3>정말 탈퇴하시겠어요?</h3><p>탈퇴하면 모든 데이터가 삭제되며 복구할 수 없습니다.</p></div><div class="modal-btns" style="margin-top:16px"><button class="btn-cancel" onclick="closeModal('withdraw')">취소</button><button class="btn-withdraw-confirm" onclick="doWithdraw()">🗑️ 탈퇴하기</button></div></div></div>
+<div class="notice-popup-overlay" id="notice-popup"><div class="notice-popup"><div class="notice-popup-header"><h3>📢 공지사항</h3><p>새로운 업데이트 소식을 확인하세요!</p></div><div class="notice-popup-body" id="notice-popup-body"></div><div style="padding:8px 18px 0;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="$('notice-today-check').checked=!$('notice-today-check').checked"><input type="checkbox" id="notice-today-check" style="width:16px;height:16px"><label style="font-size:12px;color:#888;cursor:pointer">오늘 하루 그만보기</label></div><div class="notice-popup-footer"><button class="btn-notice-close" onclick="closeNoticePopup()">닫기</button><button class="btn-notice-detail" onclick="closeNoticePopup()">확인했어요 👍</button></div></div></div>
+<div class="modal-overlay" id="modal-terms-view"><div class="modal-sheet"><div class="modal-handle"></div><p class="modal-title" id="terms-view-title">📄 이용약관</p><div class="terms-modal-body" id="terms-view-body"></div><div class="modal-btns" style="margin-top:12px"><button class="btn-submit" onclick="closeModal('terms-view')" style="flex:1">확인</button></div></div></div>
+<!-- ★ PWA 설치 배너 ★ -->
+<div class="pwa-install-banner" id="pwa-install-banner">
+    <div class="pwa-install-top">
+        <span class="pwa-icon">🚛</span>
+        <div><h4>운사트 앱 설치</h4><p>홈 화면에 추가하면 더 빠르게!</p></div>
+    </div>
+    <div class="pwa-install-btns">
+        <button class="btn-install" onclick="installPWA()">📲 설치하기</button>
+        <button class="btn-later" onclick="dismissPWA()">나중에</button>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ================================================================
+   ★★★ Firebase 초기화 ★★★
+================================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbBCc7EHTTjI3VxfvuzFtV3fsZfj9H_jU",
+  authDomain: "transport-community-c5fc1.firebaseapp.com",
+  projectId: "transport-community-c5fc1",
+  storageBucket: "transport-community-c5fc1.firebasestorage.app",
+  messagingSenderId: "72501800775",
+  appId: "1:72501800775:web:007a8f17272b10cf7c2662",
+  measurementId: "G-EC6QE2KWCM"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const AUTO_LOGIN_KEY = 'tc_auto_login_at';
+const AUTO_LOGIN_MS = 24 * 60 * 60 * 1000; // 24시간
+const LOCAL_WRITE_GUARD_MS = 15000; // 최근 로컬 작성 직후 서버값 덮어쓰기 방지
+const localWriteAt = { posts:0, jobPosts:0, driverPosts:0, driverApps:0, companyApps:0, notices:0 };
+const FIRESTORE_SHARED_JSON_SAFE_BYTES = 900000; // 단일 문서 필드 한도(1MiB) 여유
+function isRenderablePostImage(img){return typeof img==='string'&&(img.startsWith('data:')||/^https?:\/\//i.test(img));}
+const COMMUNITY_VIDEO_MAX_SEC=30,COMMUNITY_VIDEO_MAX_BYTES=55*1024*1024;
+function isPostVideoUrl(u){return typeof u==='string'&&/^https?:\/\//i.test(u);}
+function htmlAttrEscape(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function buildCommunityPostMediaHtml(p,kind){
+  const v=p.video&&isPostVideoUrl(p.video)?htmlAttrEscape(p.video):'';
+  const imgs=(p.imgs||[]).filter(x=>isRenderablePostImage(x)).map(img=>htmlAttrEscape(img));
+  if(!v&&!imgs.length)return'';
+  if(kind==='feed'){
+    let s='';
+    if(v)s+=`<div class="feed-img-item feed-img-video"><video controls playsinline preload="metadata" src="${v}" style="width:100%;height:100%;object-fit:contain;background:#000"></video></div>`;
+    s+=imgs.map(src=>`<div class="feed-img-item" onclick="openPostDetail(${p.id})"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
+    return`<div class="feed-imgs">${s}</div>`;
+  }
+  if(kind==='list'){
+    let s='';
+    if(v)s+=`<div class="post-img-thumb post-img-video"><video controls playsinline preload="metadata" src="${v}" style="width:100%;height:100%;object-fit:contain;background:#000"></video></div>`;
+    s+=imgs.map(src=>`<div class="post-img-thumb"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('');
+    return`<div class="post-img-preview">${s}</div>`;
+  }
+  if(kind==='detail'){
+    let s='';
+    if(v)s+=`<div class="pdi post-detail-video"><video controls playsinline preload="metadata" src="${v}" style="width:100%;height:100%;object-fit:contain;background:#000"></video></div>`;
+    s+=imgs.map(src=>`<div class="pdi"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('');
+    return`<div class="post-detail-imgs">${s}</div>`;
+  }
+  return'';
+}
+async function uploadCommunityPostVideo(file){
+  const user=auth.currentUser;
+  if(!user)throw new Error('auth-required-for-images');
+  const m=file.name&&file.name.match(/\.[a-z0-9]+$/i);
+  const ext=m?m[0]:'.mp4';
+  const path=`community_posts/${user.uid}/videos/${Date.now()}_${Math.random().toString(36).slice(2,9)}${ext}`;
+  const meta={contentType:file.type||'video/mp4'};
+  const snap=await storage.ref(path).put(file,meta);
+  return snap.ref.getDownloadURL();
+}
+async function uploadCommunityPostImages(imgs){
+  const user=auth.currentUser,out=[];
+  for(let i=0;i<imgs.length;i++){
+    const img=imgs[i];
+    if(!img||typeof img!=='string')continue;
+    if(img.startsWith('data:')){
+      if(!user)throw new Error('auth-required-for-images');
+      const path=`community_posts/${user.uid}/${Date.now()}_${i}_${Math.random().toString(36).slice(2,9)}`;
+      const snap=await storage.ref(path).putString(img,'data_url');
+      out.push(await snap.ref.getDownloadURL());
+    }else out.push(img);
+  }
+  return out;
+}
+
+function getLS(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+function setLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function setLoginSession(){ localStorage.setItem(AUTO_LOGIN_KEY, String(Date.now())); }
+function clearLoginSession(){ localStorage.removeItem(AUTO_LOGIN_KEY); }
+function isLoginSessionValid(){
+  const ts = parseInt(localStorage.getItem(AUTO_LOGIN_KEY) || '0', 10);
+  if(!ts) return false;
+  return (Date.now() - ts) <= AUTO_LOGIN_MS;
+}
+function getPosts() { return getLS('tc_posts', []); }
+function savePosts(p) { setLS('tc_posts', p); localWriteAt.posts = Date.now(); syncToFirestore('posts', p).catch(()=>{}); }
+function getJobPosts() { return getLS('tc_jobPosts', []); }
+function saveJobPosts(j) { setLS('tc_jobPosts', j); localWriteAt.jobPosts = Date.now(); syncToFirestore('jobPosts', j).catch(()=>{}); }
+const EXAMPLE_JOB_POSTS=[{id:88001,title:'[예시] 서울 송파 1톤 일배 기사',company:'CJ대한통운',region:'서울',car:'1톤 트럭',career:'경력 1년↑',pay:'월 400만원~',workday:'주 5일',contact:'02-0000-8801',desc:'송파·강남권 당일배송 담당. 운사트 데모용 예시 공고입니다.',companyname:'송파행복물류',status:'active'},{id:88002,title:'[예시] 경기 화성 냉동탑 기사',company:'한진택배',region:'경기',car:'냉동탑차',career:'경력 3년↑',pay:'월 450만원~',workday:'주 6일',contact:'031-000-8802',desc:'식품 냉장·냉동 전담. 데모 공고.',companyname:'화성쿨체인',status:'active'},{id:88003,title:'[예시] 부산 해운대 5톤 직배',company:'쿠팡로지스틱스',region:'부산',car:'5톤',career:'신입 가능',pay:'월 420만원~',workday:'주 5일',contact:'051-000-8803',desc:'새벽·주간 배송. 데모 공고.',companyname:'부산C포센터',status:'active'},{id:88004,title:'[예시] 대구 수성 윙바디 용차',company:'용차',region:'대구',car:'윙바디',career:'경력 2년↑',pay:'건당·일당 협의',workday:'협의 가능',contact:'010-8804-8804',desc:'간선·복합 화물. 데모 공고.',companyname:'수성용차팀',status:'active'},{id:88005,title:'[예시] 전국 간선 11톤 기사',company:'기타 운송사',region:'전국',car:'11톤',career:'경력 무관',pay:'거리별 정산',workday:'주 6일',contact:'010-8805-8805',desc:'수도권↔지방 간선. 데모 공고.',companyname:'전국익스프레스',status:'active'}];
+function mergeExampleJobPostsOnce(){try{const k='tc_example_jobs_merged_v1';if(localStorage.getItem(k))return;const jobs=getJobPosts();const have=new Set(jobs.map(j=>j.id));const missing=EXAMPLE_JOB_POSTS.filter(e=>!have.has(e.id));if(!missing.length){localStorage.setItem(k,'1');return;}saveJobPosts([...missing,...jobs]);localStorage.setItem(k,'1');}catch(e){}}
+function getDriverPosts() { return getLS('tc_driverPosts', []); }
+function saveDriverPosts(d) { setLS('tc_driverPosts', d); localWriteAt.driverPosts = Date.now(); syncToFirestore('driverPosts', d).catch(()=>{}); }
+function getDriverApps() { return getLS('tc_driverApps', []); }
+function saveDriverApps(a) { setLS('tc_driverApps', a); localWriteAt.driverApps = Date.now(); syncToFirestore('driverApps', a).catch(()=>{}); }
+function getCompanyApps() { return getLS('tc_companyApps', []); }
+function saveCompanyApps(a) { setLS('tc_companyApps', a); localWriteAt.companyApps = Date.now(); syncToFirestore('companyApps', a).catch(()=>{}); }
+function getNotifications() { return getLS('tc_notifications', []); }
+function saveNotifications(n) { setLS('tc_notifications', n); syncPrivateToFirestore('notifications', n); }
+function getDayRecords() { return getLS('tc_dayRecords', {}); }
+function saveDayRecords(r) { setLS('tc_dayRecords', r); syncPrivateToFirestore('dayRecords', r); }
+function getLikedPosts() { return new Set(getLS('tc_likedPosts', [])); }
+function saveLikedPosts(s) { setLS('tc_likedPosts', [...s]); syncPrivateToFirestore('likedPosts', [...s]); }
+function getNotices() { return getLS('tc_notices', [{id:1,icon:'🎉',title:'커뮤니티 좋아요/댓글 기능 추가',desc:'게시글에 좋아요와 댓글을 남길 수 있어요!',isNew:true},{id:2,icon:'🔔',title:'실시간 알림 시스템 오픈',desc:'지원 결과, 새 지원자 알림을 바로 받아보세요.',isNew:true},{id:3,icon:'📋',title:'지원현황 페이지 개선',desc:'대기중/처리완료 탭으로 지원 내역을 한눈에!',isNew:false}]); }
+
+function syncToFirestore(collection, data, opts) {
+  opts = opts || {};
+  const json = JSON.stringify(data);
+  if (new Blob([json]).size > FIRESTORE_SHARED_JSON_SAFE_BYTES) {
+    if (!opts.silent) showToast('⚠️ 저장 데이터가 너무 커요. 사진·글을 줄여 주세요.');
+    return Promise.reject(new Error('payload-too-large'));
+  }
+  return db.collection('sharedData').doc(collection).set({ data: json, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => {
+    console.warn('Firestore sync fail:', err);
+    if (!opts.silent) {
+      let msg = '⚠️ 서버 저장에 실패했어요.';
+      if (err.code === 'permission-denied') msg = '⚠️ 저장 권한이 없어요. 로그인·보안 규칙을 확인해 주세요.';
+      else if (err.code === 'invalid-argument' || (err.message && /too large|exceeds|maximum/i.test(err.message))) msg = '⚠️ 데이터가 너무 커 저장할 수 없어요.';
+      showToast(msg);
+    }
+    return Promise.reject(err);
+  });
+}
+async function appendItemToSharedArrayDoc(docKey, newItem, opts) {
+  opts = opts || {};
+  const ref = db.collection('sharedData').doc(docKey);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    let arr = [];
+    if (snap.exists && snap.data().data) {
+      try { arr = JSON.parse(snap.data().data); } catch (e) { arr = []; }
+    }
+    if (!Array.isArray(arr)) arr = [];
+    const sid = String(newItem.id);
+    if (arr.some((x) => x && String(x.id) === sid)) return arr;
+    arr = [newItem, ...arr];
+    const json = JSON.stringify(arr);
+    if (new Blob([json]).size > FIRESTORE_SHARED_JSON_SAFE_BYTES) {
+      const e = new Error('payload-too-large');
+      e.code = 'payload-too-large';
+      throw e;
+    }
+    tx.set(ref, { data: json, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return arr;
+  }).catch((err) => {
+    console.warn('Firestore tx fail:', docKey, err);
+    if (!opts.silent) {
+      let msg = '⚠️ 서버 저장에 실패했어요.';
+      if (err.code === 'permission-denied') msg = '⚠️ 저장 권한이 없어요. 로그인·Firestore 규칙을 확인해 주세요.';
+      else if (err.code === 'failed-precondition' || err.code === 'aborted') msg = '⚠️ 동시에 저장이 겹쳤어요. 잠시 후 다시 시도해 주세요.';
+      else if (err.code === 'payload-too-large' || err.message === 'payload-too-large') msg = '⚠️ 저장 데이터가 너무 커요.';
+      showToast(msg);
+    }
+    return Promise.reject(err);
+  });
+}
+function jobPostOwnedByMe(j){if(!currentUser||!auth.currentUser||!j)return false;if(j.ownerUid)return j.ownerUid===auth.currentUser.uid;return(j.companyname||'').trim()===(currentUser.name||'').trim()}
+function getMyCompanyJobPosts(){return getJobPosts().filter(j=>(j.status||'active')==='active'&&jobPostOwnedByMe(j))}
+async function updateItemInSharedArrayDoc(docKey,itemId,buildNext,opts){
+  opts=opts||{};
+  const ref=db.collection('sharedData').doc(docKey);
+  return db.runTransaction(async(tx)=>{
+    const snap=await tx.get(ref);
+    let arr=[];
+    if(snap.exists&&snap.data().data){try{arr=JSON.parse(snap.data().data)}catch(e){arr=[]}}
+    if(!Array.isArray(arr))arr=[];
+    const idx=arr.findIndex(x=>x&&String(x.id)===String(itemId));
+    if(idx<0){const e=new Error('not-found');e.code='not-found';throw e}
+    const old=arr[idx];
+    const uid=auth.currentUser&&auth.currentUser.uid;
+    if(old.ownerUid){if(!uid||old.ownerUid!==uid){const e=new Error('forbidden');e.code='permission-denied';throw e}}
+    else{const myName=(currentUser&&currentUser.name||'').trim();if((old.companyname||'').trim()!==myName){const e=new Error('forbidden');e.code='permission-denied';throw e}}
+    const next=buildNext(old);
+    if(!next||String(next.id)!==String(old.id))throw new Error('invalid-update');
+    arr[idx]=next;
+    const json=JSON.stringify(arr);
+    if(new Blob([json]).size>FIRESTORE_SHARED_JSON_SAFE_BYTES){const e=new Error('payload-too-large');e.code='payload-too-large';throw e}
+    tx.set(ref,{data:json,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    return arr;
+  }).catch(err=>{
+    console.warn('Firestore update tx fail:',docKey,err);
+    if(!opts.silent){
+      let msg='⚠️ 서버 저장에 실패했어요.';
+      if(err.code==='permission-denied'||err.message==='forbidden')msg='⚠️ 수정 권한이 없어요.';
+      else if(err.code==='not-found')msg='⚠️ 공고를 찾을 수 없어요.';
+      else if(err.code==='failed-precondition'||err.code==='aborted')msg='⚠️ 동시에 저장이 겹쳤어요. 잠시 후 다시 시도해 주세요.';
+      else if(err.code==='payload-too-large'||err.message==='payload-too-large')msg='⚠️ 저장 데이터가 너무 커요.';
+      showToast(msg);
+    }
+    return Promise.reject(err);
+  });
+}
+async function removeItemFromSharedArrayDoc(docKey,itemId,opts){
+  opts=opts||{};
+  const ref=db.collection('sharedData').doc(docKey);
+  return db.runTransaction(async(tx)=>{
+    const snap=await tx.get(ref);
+    let arr=[];
+    if(snap.exists&&snap.data().data){try{arr=JSON.parse(snap.data().data)}catch(e){arr=[]}}
+    if(!Array.isArray(arr))arr=[];
+    const old=arr.find(x=>x&&String(x.id)===String(itemId));
+    if(!old){const e=new Error('not-found');e.code='not-found';throw e}
+    const uid=auth.currentUser&&auth.currentUser.uid;
+    if(old.ownerUid){if(!uid||old.ownerUid!==uid){const e=new Error('forbidden');e.code='permission-denied';throw e}}
+    else{const myName=(currentUser&&currentUser.name||'').trim();if((old.companyname||'').trim()!==myName){const e=new Error('forbidden');e.code='permission-denied';throw e}}
+    arr=arr.filter(x=>x&&String(x.id)!==String(itemId));
+    const json=JSON.stringify(arr);
+    if(new Blob([json]).size>FIRESTORE_SHARED_JSON_SAFE_BYTES){const e=new Error('payload-too-large');e.code='payload-too-large';throw e}
+    tx.set(ref,{data:json,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    return arr;
+  }).catch(err=>{
+    console.warn('Firestore remove tx fail:',docKey,err);
+    if(!opts.silent){
+      let msg='⚠️ 서버 삭제에 실패했어요.';
+      if(err.code==='permission-denied'||err.message==='forbidden')msg='⚠️ 삭제 권한이 없어요.';
+      else if(err.code==='not-found')msg='⚠️ 공고를 찾을 수 없어요.';
+      else if(err.code==='failed-precondition'||err.code==='aborted')msg='⚠️ 동시에 저장이 겹쳤어요. 잠시 후 다시 시도해 주세요.';
+      showToast(msg);
+    }
+    return Promise.reject(err);
+  });
+}
+function syncPrivateToFirestore(key, data) { const user = auth.currentUser; if(!user) return; db.collection('users').doc(user.uid).collection('private').doc(key).set({ data: JSON.stringify(data), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.warn('Private sync fail:', err)); }
+
+async function loadSharedDataFromFirestore() { const keys = [{fsKey:'posts',lsKey:'tc_posts'},{fsKey:'jobPosts',lsKey:'tc_jobPosts'},{fsKey:'driverPosts',lsKey:'tc_driverPosts'},{fsKey:'driverApps',lsKey:'tc_driverApps'},{fsKey:'companyApps',lsKey:'tc_companyApps'},{fsKey:'notices',lsKey:'tc_notices'}]; for(const k of keys) { try { const doc = await db.collection('sharedData').doc(k.fsKey).get(); if(doc.exists && doc.data().data) { if(localWriteAt[k.fsKey] && (Date.now()-localWriteAt[k.fsKey] < LOCAL_WRITE_GUARD_MS)) continue; setLS(k.lsKey, JSON.parse(doc.data().data)); } } catch(err) { console.warn('Load fail:', err); } } }
+async function loadPrivateDataFromFirestore(uid) { const keys = [{fsKey:'notifications',lsKey:'tc_notifications'},{fsKey:'dayRecords',lsKey:'tc_dayRecords'},{fsKey:'likedPosts',lsKey:'tc_likedPosts'}]; for(const k of keys) { try { const doc = await db.collection('users').doc(uid).collection('private').doc(k.fsKey).get(); if(doc.exists && doc.data().data) setLS(k.lsKey, JSON.parse(doc.data().data)); } catch(err) {} } likedPosts = getLikedPosts(); }
+
+let realtimeListenersStarted=false;
+let sharedDataAutoRefreshStarted=false;
+function setupRealtimeListeners() {
+  if(realtimeListenersStarted) return;
+  realtimeListenersStarted=true;
+  [{fsKey:'posts',lsKey:'tc_posts'},{fsKey:'jobPosts',lsKey:'tc_jobPosts'},{fsKey:'driverPosts',lsKey:'tc_driverPosts'},{fsKey:'driverApps',lsKey:'tc_driverApps'},{fsKey:'companyApps',lsKey:'tc_companyApps'}].forEach(k => {
+    db.collection('sharedData').doc(k.fsKey).onSnapshot(doc => {
+      if(doc.exists && doc.data().data) {
+        if(localWriteAt[k.fsKey] && (Date.now()-localWriteAt[k.fsKey] < LOCAL_WRITE_GUARD_MS)) return;
+        setLS(k.lsKey, JSON.parse(doc.data().data));
+        try {
+          if(k.fsKey==='posts'){renderPosts();renderHomeFeed();}
+          if(k.fsKey==='jobPosts'){renderJobList();if(currentUser&&currentUser.role==='운송회사')renderCompanyMyJobs();}
+          if(k.fsKey==='driverPosts'){renderDriverList();}
+          if(k.fsKey==='driverApps'||k.fsKey==='companyApps'){updateApplyBadge();}
+        } catch(e){}
+      }
+    }, err => {});
+  });
+}
+function startSharedDataAutoRefresh(){
+  if(sharedDataAutoRefreshStarted) return;
+  sharedDataAutoRefreshStarted=true;
+  // 실시간 리스너 누락/지연 시 대비한 백업 동기화
+  setInterval(async()=>{
+    if(!currentUser) return;
+    try{
+      await loadSharedDataFromFirestore();
+      const page=getActivePageName();
+      if(page==='home'){renderHomeFeed();renderHomeNotifications();}
+      if(page==='community'){renderPosts();}
+      if(page==='job'){
+        const isD=currentUser&&currentUser.role==='화물기사';
+        const isC=currentUser&&currentUser.role==='운송회사';
+        if(isD) renderJobList();
+        if(isC){renderCompanyMyJobs();renderDriverList();}
+      }
+      updateApplyBadge();
+    }catch(e){}
+  }, 8000);
+}
+
+async function initDemoData() { try { const postsDoc = await db.collection('sharedData').doc('posts').get(); if(!postsDoc.exists) { const demoPosts=[{id:1,author:'김기사님',avatar:'김',role:'화물기사',cat:'정보공유',time:'10분전',title:'동탄IC 정체 심각합니다',content:'오늘 오전 동탄IC 공사로 정체가 심해요. 우회 추천 🚧',imgs:['🚦','🛣️'],likes:12,comments:5,views:128,status:'active',commentList:[{id:1,author:'박기사님',avatar:'박',text:'저도 30분 넘게 막혔어요 😤',time:'8분전'},{id:2,author:'이사장님',avatar:'이',text:'정보 감사합니다!',time:'5분전'}]},{id:2,author:'이사장님',avatar:'이',role:'운송회사',cat:'자유',time:'1시간전',title:'경유값 또 올랐네요...',content:'이번 주 경유값이 리터당 1,780원까지 올랐어요.',imgs:[],likes:34,comments:18,views:402,status:'active',commentList:[{id:1,author:'최기사님',avatar:'최',text:'진짜 너무 힘들어요..',time:'50분전'}]},{id:3,author:'박화주님',avatar:'박',role:'화물기사',cat:'긴급화물',time:'2시간전',title:'급구) 오늘 부산행 화물',content:'오늘 오후 2시 출발 서울→부산 화물 있습니다.',imgs:['📦'],likes:7,comments:22,views:315,status:'active',commentList:[]}]; const demoJobs=EXAMPLE_JOB_POSTS; const demoDrivers=[{id:1,name:'김○○ 기사님',car:'1톤 트럭',career:'3~5년',region:'서울',pay:'월 350만원 이상',workday:'주 5일',intro:'서울 전 지역 배송 가능. 무사고 5년.',status:'active'}]; setLS('tc_posts',demoPosts);setLS('tc_jobPosts',demoJobs);setLS('tc_driverPosts',demoDrivers); syncToFirestore('posts',demoPosts,{silent:true}).catch(()=>{});syncToFirestore('jobPosts',demoJobs,{silent:true}).catch(()=>{});syncToFirestore('driverPosts',demoDrivers,{silent:true}).catch(()=>{});syncToFirestore('driverApps',[],{silent:true}).catch(()=>{});syncToFirestore('companyApps',[],{silent:true}).catch(()=>{}); } } catch(err) { if(!localStorage.getItem('tc_posts')) setLS('tc_posts',[{id:1,author:'김기사님',avatar:'김',role:'화물기사',cat:'정보공유',time:'10분전',title:'동탄IC 정체 심각합니다',content:'오늘 오전 동탄IC 공사로 정체가 심해요.',imgs:[],likes:12,comments:2,views:128,status:'active',commentList:[]}]); } }
+
+let selectedRole='화물기사',currentUser=null,currentCat='전체',currentJobWriteType='',selectedDayKey='',currentJobId=null,currentDriverId=null,currentPostId=null,likedPosts=getLikedPosts(),writtenImgs=[],communityVideoDraft=null,calYear=(new Date()).getFullYear(),calMonth=(new Date()).getMonth(),applyTabMode='pending',activityTab='posts',editingPostId=null,editingCommentInfo=null,deleteTarget=null,writeMode='new',editingJobId=null,companyApplyJobFilter=null;
+
+function $(id){return document.getElementById(id)}
+function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function openModal(id){$('modal-'+id).classList.add('active')}
+function closeModal(id){$('modal-'+id).classList.remove('active')}
+function getNow(){const d=new Date();return`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`}
+function getActivePageName(){const p=document.querySelector('.page.active');return p?(p.id||'').replace('page-',''):'home'}
+
+let pullStartY=0,pullDistance=0,pullActive=false,pullRefreshing=false;
+async function refreshCurrentPageData(){
+  if(!currentUser||pullRefreshing)return;
+  pullRefreshing=true;
+  const indicator=$('pull-indicator');
+  try{
+    indicator.textContent='새 데이터 불러오는 중...';
+    indicator.classList.add('show');
+    await loadSharedDataFromFirestore();
+    if(currentUser.uid) await loadPrivateDataFromFirestore(currentUser.uid);
+    likedPosts=getLikedPosts();
+    const page=getActivePageName();
+    goPage(page||'home');
+    showToast('✅ 최신 데이터로 갱신됐어요');
+  }catch(e){
+    showToast('⚠️ 새로고침 중 오류가 발생했어요');
+  }finally{
+    setTimeout(()=>{indicator.classList.remove('show');indicator.textContent='↓ 아래로 당겨서 새로고침';},200);
+    pullRefreshing=false;
+  }
+}
+function getPullScrollEl(){
+  const pc=$('page-content');
+  if(pc&&pc.classList.contains('home-feed-mode')){
+    const hs=$('home-feed-scroll');
+    if(hs) return hs;
+  }
+  return pc;
+}
+function initPullToRefresh(){
+  const indicator=$('pull-indicator');
+  if(!indicator)return;
+
+  const onTouchStart=(e)=>{
+    const scroller=getPullScrollEl();
+    if(!scroller||pullRefreshing) return;
+    if(scroller.scrollTop>0) return;
+    pullStartY=e.touches[0].clientY;
+    pullDistance=0;
+    pullActive=true;
+  };
+  const onTouchMove=(e)=>{
+    if(!pullActive) return;
+    const scroller=getPullScrollEl();
+    if(!scroller) return;
+    const dy=e.touches[0].clientY-pullStartY;
+    if(dy<=0){pullDistance=0;indicator.classList.remove('show');return;}
+    pullDistance=Math.min(dy,110);
+    if(scroller.scrollTop===0){
+      indicator.classList.add('show');
+      indicator.textContent=pullDistance>75?'↻ 놓으면 새로고침':'↓ 아래로 당겨서 새로고침';
+    }
+  };
+  const onTouchEnd=()=>{
+    if(!pullActive) return;
+    pullActive=false;
+    const scroller=getPullScrollEl();
+    if(pullDistance>75&&scroller&&scroller.scrollTop===0) refreshCurrentPageData();
+    else{
+      indicator.classList.remove('show');
+      indicator.textContent='↓ 아래로 당겨서 새로고침';
+    }
+    pullDistance=0;
+  };
+
+  $('page-content').addEventListener('touchstart',onTouchStart,{passive:true});
+  $('page-content').addEventListener('touchmove',onTouchMove,{passive:true});
+  $('page-content').addEventListener('touchend',onTouchEnd,{passive:true});
+}
+
+function isStrongPassword(pw){
+  // 8자 이상, 영문 대문자/소문자/숫자/특수문자 모두 포함
+  if(!pw || pw.length < 8) return false;
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasLower = /[a-z]/.test(pw);
+  const hasDigit = /[0-9]/.test(pw);
+  const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+  return hasUpper && hasLower && hasDigit && hasSpecial;
+}
+
+async function doRegister(){hideAllErrors();const name=$('reg-name').value.trim(),email=$('reg-email').value.trim(),pw=$('reg-pw').value,pw2=$('reg-pw2').value;let v=true;if(!name){$('reg-name-err').style.display='block';v=false;}if(!email){$('reg-email-err').style.display='block';v=false;}if(!isStrongPassword(pw)){$('reg-pw-err').style.display='block';v=false;}if(pw!==pw2){$('reg-pw2-err').style.display='block';v=false;}if(!$('consent-terms').checked||!$('consent-privacy').checked){$('reg-consent-err').style.display='block';v=false;}if(!v)return;const btn=$('btn-register');btn.disabled=true;btn.textContent='가입 중...';try{const cred=await auth.createUserWithEmailAndPassword(email,pw);const now=new Date();const joinDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const userData={name,email,role:selectedRole,status:'active',joined:joinDate,uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);await db.collection('consentLog').add({email,name,role:selectedRole,terms:true,privacy:true,marketing:$('consent-marketing').checked,time:joinDate+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),uid:cred.user.uid});currentUser=userData;setLoginSession();showSuccess('🎉',name+'님 가입 완료!','운사트의 새 멤버가 되셨어요!');}catch(err){if(err.code==='auth/email-already-in-use')$('reg-dup-err').style.display='block';else if(err.code==='auth/invalid-email'){$('reg-email-err').textContent='올바른 이메일을 입력해주세요';$('reg-email-err').style.display='block';}else if(err.code==='auth/weak-password'){$('reg-pw-err').textContent='비밀번호가 너무 약해요';$('reg-pw-err').style.display='block';}else showToast('⚠️ 회원가입 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='가입하기';}}
+
+async function doLogin(){hideAllErrors();const id=$('login-id').value.trim(),pw=$('login-pw').value;let v=true;if(!id){$('login-id-err').style.display='block';v=false;}if(!pw){$('login-pw-err').style.display='block';v=false;}if(!v)return;const btn=$('btn-login');btn.disabled=true;btn.textContent='로그인 중...';try{const cred=await auth.signInWithEmailAndPassword(id,pw);const doc=await db.collection('users').doc(cred.user.uid).get();if(doc.exists){currentUser=doc.data();if(currentUser.status==='suspended'){await auth.signOut();clearLoginSession();showToast('⚠️ 관리자에 의해 계정이 정지되었습니다');currentUser=null;return;}setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}else{const userData={name:cred.user.email.split('@')[0],email:cred.user.email,role:'화물기사',status:'active',joined:new Date().toISOString().slice(0,10),uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);currentUser=userData;setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}}catch(err){if(err.code==='auth/user-not-found'||err.code==='auth/wrong-password'||err.code==='auth/invalid-credential')$('login-fail-err').style.display='block';else showToast('⚠️ 로그인 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='로그인';}}
+
+async function googleLogin(){try{const provider=new firebase.auth.GoogleAuthProvider();const result=await auth.signInWithPopup(provider);const user=result.user;const doc=await db.collection('users').doc(user.uid).get();if(doc.exists){currentUser=doc.data();}else{const userData={name:user.displayName||user.email.split('@')[0],email:user.email,role:'화물기사',status:'active',joined:new Date().toISOString().slice(0,10),uid:user.uid,provider:'google'};await db.collection('users').doc(user.uid).set(userData);currentUser=userData;}setLoginSession();showSuccess('🔵',currentUser.name+'님 환영합니다!','Google로 로그인했어요!');}catch(err){if(err.code!=='auth/popup-closed-by-user')showToast('⚠️ Google 로그인 실패');}}
+
+function doFindPw(){openModal('find-pw')}
+async function sendPasswordReset(){const email=$('find-pw-email').value.trim();if(!email){showToast('⚠️ 이메일을 입력해주세요');return;}try{await auth.sendPasswordResetEmail(email);$('find-pw-result-text').textContent='✅ '+email+'로 비밀번호 재설정 링크를 보냈어요!';$('find-pw-result').style.display='block';}catch(err){$('find-pw-result-text').textContent='⚠️ 해당 이메일의 계정을 찾을 수 없어요';$('find-pw-result').style.display='block';}}
+
+async function changePassword(){const cur=$('pw-current').value,nw=$('pw-new').value,nw2=$('pw-new2').value;if(!cur){showToast('⚠️ 현재 비밀번호를 입력해주세요');return;}if(!isStrongPassword(nw)){showToast('⚠️ 새 비밀번호는 8자 이상이며 영문 대/소문자/숫자/특수문자를 모두 포함해야 해요');return;}if(nw!==nw2){showToast('⚠️ 새 비밀번호가 일치하지 않아요');return;}try{const user=auth.currentUser;const credential=firebase.auth.EmailAuthProvider.credential(user.email,cur);await user.reauthenticateWithCredential(credential);await user.updatePassword(nw);$('pw-current').value='';$('pw-new').value='';$('pw-new2').value='';closeModal('change-pw');showToast('✅ 비밀번호가 변경됐어요!');}catch(err){if(err.code==='auth/wrong-password'||err.code==='auth/invalid-credential')showToast('⚠️ 현재 비밀번호가 틀렸어요');else showToast('⚠️ 비밀번호 변경 실패');}}
+
+async function doLogout(){try{await auth.signOut();}catch(e){}clearLoginSession();currentUser=null;$('screen-app').classList.remove('active');$('screen-login').classList.add('active');$('login-id').value='';$('login-pw').value='';$('success-inner').style.display='none';document.querySelector('.login-form').style.display='block';switchTab('login');}
+
+async function doWithdraw(){if(!currentUser)return;try{const user=auth.currentUser;if(user){await db.collection('users').doc(user.uid).delete();await user.delete();}clearLoginSession();closeModal('withdraw');currentUser=null;$('screen-app').classList.remove('active');$('screen-login').classList.add('active');$('login-id').value='';$('login-pw').value='';$('success-inner').style.display='none';document.querySelector('.login-form').style.display='block';switchTab('login');showToast('👋 탈퇴가 완료되었어요');}catch(err){showToast('⚠️ 탈퇴 처리 중 오류가 발생했어요. 다시 시도해주세요.');}}
+
+/* ★★★ 카카오 로그인(비활성) ★★★
+   - 현재 Firestore Rules는 Firebase Auth 기반으로 잠겨있어서
+     “카카오 SDK만으로 로그인 → Firestore에 직접 쓰기” 흐름이 막힙니다.
+   - 추후 Cloud Functions + Firebase Custom Token 방식으로 정식 연동 권장.
+*/
+function kakaoLogin(){showToast('⚠️ 카카오 로그인은 준비 중입니다.');}
+async function handleKakaoCallback(){return false;}
+
+/* ★★★ 네이버 로그인 ★★★ */
+const NAVER_CLIENT_ID='YOUR_NAVER_CLIENT_ID';
+const NAVER_CALLBACK_URL=window.location.origin+'/';
+function initNaverLogin(){if(NAVER_CLIENT_ID==='YOUR_NAVER_CLIENT_ID')return;}
+function socialLogin(type){if(type==='naver'){if(NAVER_CLIENT_ID==='YOUR_NAVER_CLIENT_ID'){showToast('⚠️ 네이버 로그인은 준비 중입니다.');return;}var state=Math.random().toString(36).substr(2);var loginUrl='https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id='+NAVER_CLIENT_ID+'&redirect_uri='+encodeURIComponent(NAVER_CALLBACK_URL)+'&state='+state;window.open(loginUrl,'naver_login','width=500,height=600,scrollbars=yes');}}
+async function processNaverLogin(accessToken){try{var naverId='naver_'+Date.now();var nickname='네이버사용자';var email=naverId+'@naver.user';var naverDocRef=db.collection('users').doc(naverId);var naverDoc=await naverDocRef.get();if(naverDoc.exists){currentUser=naverDoc.data();if(currentUser.status==='suspended'){showToast('⚠️ 계정이 정지되었습니다');currentUser=null;return;}}else{var now=new Date();var joinDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');var userData={name:nickname,email:email,role:'화물기사',status:'active',joined:joinDate,uid:naverId,provider:'naver'};await naverDocRef.set(userData);currentUser=userData;}showSuccess('🟢',currentUser.name+'님 환영합니다!','네이버로 로그인했어요!');}catch(err){showToast('⚠️ 네이버 로그인 실패');}}
+async function handleNaverCallback(){var hash=window.location.hash;if(!hash||!hash.includes('access_token='))return false;var params=new URLSearchParams(hash.substring(1));var accessToken=params.get('access_token');if(!accessToken)return false;window.history.replaceState({},'',window.location.pathname);try{await processNaverLogin(accessToken);return true;}catch(err){return false;}}
+
+async function doFindId(){
+  $('find-id-result-text').textContent='보안을 위해 이름으로 아이디(이메일)를 조회하는 기능은 제공하지 않아요. 가입 시 사용한 이메일을 떠올리신 뒤 「비밀번호 찾기」로 재설정 링크를 받거나, 계정이 이메일 로그인인 경우 같은 이메일로 로그인을 시도해 보세요.';
+  $('find-id-result').style.display='block';
+}
+
+async function saveProfile(){const name=$('edit-name').value.trim();if(!name){showToast('⚠️ 이름을 입력해주세요');return;}try{const user=auth.currentUser;if(user)await db.collection('users').doc(user.uid).update({name});currentUser.name=name;$('header-name').textContent=name+'님';$('profile-name').textContent=name;closeModal('edit-profile');showToast('✅ 프로필이 수정됐어요!');}catch(err){showToast('⚠️ 프로필 수정 실패');}}
+
+function addNotification(type,target,title,desc){const notis=getNotifications();notis.unshift({id:Date.now(),type,target,title,desc,time:getNow(),read:false});saveNotifications(notis);updateBellDot();renderHomeNotifications();}
+function syncHomeSnapHeights(){const sc=$('home-feed-scroll');if(!sc||!$('page-content')?.classList.contains('home-feed-mode'))return;const h=sc.clientHeight;if(h<50)return;sc.querySelectorAll('.home-feed-snap-item').forEach(el=>{el.style.minHeight=h+'px'});}
+let homeSnapResizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(homeSnapResizeTimer);homeSnapResizeTimer=setTimeout(()=>{if($('page-content')?.classList.contains('home-feed-mode'))syncHomeSnapHeights()},120);});
+function renderHomeNotifications(){if(!currentUser)return;const target=currentUser.role==='화물기사'?'driver':'company';const unread=getNotifications().filter(n=>n.target===target&&!n.read).slice(0,3);const section=$('home-noti-section'),list=$('home-noti-list');if(!unread.length){section.style.display='none';return;}section.style.display='block';list.innerHTML=unread.map(n=>{let icon='📩',cls='type-apply';if(n.type==='accepted'){icon='✅';cls='type-accept';}else if(n.type==='rejected'){icon='❌';cls='type-reject';}return`<div class="home-noti-card ${cls}" onclick="goPage('notification')"><span class="hn-icon">${icon}</span><div class="hn-body"><div class="hn-title">${n.title}</div><div class="hn-desc">${n.desc}</div></div><span class="hn-time">${n.time}</span></div>`}).join('');}
+function updateBellDot(){if(!currentUser)return;const target=currentUser.role==='화물기사'?'driver':'company';const unread=getNotifications().filter(n=>n.target===target&&!n.read).length;$('bell-dot').classList.toggle('active',unread>0);const badge=$('menu-noti-badge');if(unread>0){badge.style.display='inline';badge.textContent=unread;}else badge.style.display='none';}
+function renderNotifications(){if(!currentUser)return;const target=currentUser.role==='화물기사'?'driver':'company';const myNotis=getNotifications().filter(n=>n.target===target);const list=$('noti-list');if(!myNotis.length){list.innerHTML='<div class="noti-empty"><span class="empty-icon">🔔</span>알림이 없어요</div>';return;}list.innerHTML=myNotis.map(n=>{let iconCls='noti-apply',icon='📩';if(n.type==='accepted'){iconCls='noti-accept';icon='✅';}else if(n.type==='rejected'){iconCls='noti-reject';icon='❌';}return`<div class="noti-item ${n.read?'':'unread'}" onclick="readNoti(${n.id})"><div class="noti-icon ${iconCls}">${icon}</div><div class="noti-body"><div class="noti-title">${n.title}</div><div class="noti-desc">${n.desc}</div><div class="noti-time">${n.time}</div></div></div>`}).join('');}
+function readNoti(id){const notis=getNotifications();const n=notis.find(x=>x.id===id);if(n)n.read=true;saveNotifications(notis);updateBellDot();renderNotifications();}
+
+function renderHomeFeed(){const posts=getPosts().filter(p=>(p.status||'active')==='active');const feed=$('home-feed');const catEmoji={정보공유:'📢',긴급화물:'🚨',질문:'❓',자유:'😄',사고제보:'⚠️'};const recent=posts.slice(0,40);if(!recent.length){feed.innerHTML='<div class="home-feed-snap-item"><div class="feed-snap-empty-inner">아직 게시글이 없어요</div></div><div class="home-feed-snap-item home-feed-more-snap"><button type="button" class="feed-more-block" onclick="goPage(\'community\')">💬 커뮤니티에서 글 남기기</button></div>';requestAnimationFrame(()=>requestAnimationFrame(syncHomeSnapHeights));return;}const cardHtml=recent.map(p=>{const liked=likedPosts.has(p.id);const cmtCount=p.commentList?p.commentList.length:p.comments;const imgHtml=buildCommunityPostMediaHtml(p,'feed');return`<div class="home-feed-snap-item"><div class="feed-card"><div class="feed-header" onclick="openPostDetail(${p.id})"><div class="feed-avatar">${p.avatar}</div><div class="feed-author"><div class="feed-author-name">${p.author}</div><div class="feed-author-meta">${p.role} · ${p.time}</div></div><span class="feed-cat">${catEmoji[p.cat]||'📝'} ${p.cat}</span></div>${imgHtml}<div class="feed-body" onclick="openPostDetail(${p.id})"><div class="feed-title">${p.title}</div><div class="feed-preview">${p.content}</div></div><div class="feed-actions"><button class="feed-action-btn ${liked?'liked':''}" onclick="event.stopPropagation();toggleLike(${p.id});renderHomeFeed()">${liked?'❤️':'🤍'} ${p.likes}</button><button class="feed-action-btn" onclick="event.stopPropagation();openPostDetail(${p.id})">💬 ${cmtCount}</button><span class="feed-views">👁 ${p.views}</span></div></div></div>`}).join('');const moreSnap=`<div class="home-feed-snap-item home-feed-more-snap"><button type="button" class="feed-more-block" onclick="goPage('community')">${posts.length>recent.length?'💬 더 많은 글은 커뮤니티에서 →':'💬 전체 게시판 · 댓글과 글쓰기'}</button></div>`;feed.innerHTML=cardHtml+moreSnap;requestAnimationFrame(()=>requestAnimationFrame(syncHomeSnapHeights));}
+
+function updateApplyBadge(){if(!currentUser)return;$('menu-apply-status').style.display='flex';if(currentUser.role==='화물기사'){$('menu-apply-text').textContent='내가 지원한 업체';const cnt=getDriverApps().filter(a=>a.status==='waiting').length;const b=$('menu-apply-badge');if(cnt>0){b.style.display='inline';b.textContent=cnt;}else b.style.display='none';}else{$('menu-apply-text').textContent='공고 지원자 현황';const cnt=getCompanyApps().filter(a=>a.status==='waiting').length;const b=$('menu-apply-badge');if(cnt>0){b.style.display='inline';b.textContent=cnt;}else b.style.display='none';}}
+function renderApplyStatus(){const c=$('apply-status-content');if(!currentUser){c.innerHTML='';return;}if(currentUser.role==='화물기사'){if(applyTabMode==='jobposts')applyTabMode='pending';renderDriverApplyStatus(c);}else renderCompanyApplyStatus(c);}
+function renderDriverApplyStatus(c){const all=getDriverApps();const pending=all.filter(a=>a.status==='waiting');const completed=all.filter(a=>a.status!=='waiting');let html=`<p class="section-title">📋 내가 지원한 업체</p><div class="apply-tabs"><button class="apply-tab ${applyTabMode==='pending'?'active':''}" onclick="applyTabMode='pending';renderApplyStatus()">대기중 ${pending.length>0?`<span class="tab-badge">${pending.length}</span>`:''}</button><button class="apply-tab ${applyTabMode==='completed'?'active':''}" onclick="applyTabMode='completed';renderApplyStatus()">처리완료 ${completed.length>0?`<span class="tab-badge">${completed.length}</span>`:''}</button></div>`;const items=applyTabMode==='pending'?pending:completed;if(!items.length){html+=`<div class="apply-empty"><span class="empty-icon">${applyTabMode==='pending'?'📭':'📂'}</span><p>${applyTabMode==='pending'?'대기중인 지원이 없어요':'처리 완료된 내역이 없어요'}</p></div>`;}else{html+=items.map(app=>{const sl=app.status==='waiting'?'검토중':app.status==='accepted'?'합격':'불합격';return`<div class="apply-card status-${app.status}"><div class="apply-card-top"><div class="apply-card-icon company-icon">🏢</div><div class="apply-card-info"><div class="apply-card-name">${app.jobTitle}</div><div class="apply-card-meta">${app.companyname||app.company} · ${app.region}</div></div><span class="apply-status ${app.status}">${sl}</span></div><div class="apply-card-detail"><span class="apply-detail-tag">🏢 ${app.company}</span><span class="apply-detail-tag">📍 ${app.region}</span><span class="apply-detail-tag">💰 ${app.pay}</span></div><div class="apply-card-time">⏰ 지원일: ${app.time}</div></div>`}).join('');}c.innerHTML=html;}
+function renderCompanyApplyStatus(c){const allRaw=getCompanyApps();const myJobs=getMyCompanyJobPosts();let all=allRaw;if(companyApplyJobFilter!=null)all=allRaw.filter(a=>String(a.jobId)===String(companyApplyJobFilter));const pending=all.filter(a=>a.status==='waiting');const completed=all.filter(a=>a.status!=='waiting');let html='';html+=`<p class="section-title">📩 공고 지원자 현황</p><div class="apply-tabs apply-tabs-3"><button type="button" class="apply-tab ${applyTabMode==='pending'?'active':''}" onclick="applyTabMode='pending';renderApplyStatus()">신규 지원 ${pending.length>0?`<span class="tab-badge">${pending.length}</span>`:''}</button><button type="button" class="apply-tab ${applyTabMode==='completed'?'active':''}" onclick="applyTabMode='completed';renderApplyStatus()">처리완료 ${completed.length>0?`<span class="tab-badge">${completed.length}</span>`:''}</button><button type="button" class="apply-tab ${applyTabMode==='jobposts'?'active':''}" onclick="applyTabMode='jobposts';renderApplyStatus()">공고게시판 ${myJobs.length>0?`<span class="tab-badge tab-badge-muted">${myJobs.length}</span>`:''}</button></div>`;if(applyTabMode==='pending'||applyTabMode==='completed'){if(companyApplyJobFilter!=null){const jf=getJobPosts().find(x=>String(x.id)===String(companyApplyJobFilter));const ft=jf?jf.title:'선택한 공고';html+=`<div class="apply-filter-chip"><span>「${ft}」지원만 표시 중</span><button type="button" class="apply-filter-chip-x" onclick="companyApplyJobFilter=null;renderApplyStatus()">✕</button></div>`;}const items=applyTabMode==='pending'?pending:completed;if(!items.length){html+=`<div class="apply-empty"><span class="empty-icon">${applyTabMode==='pending'?'📭':'📂'}</span><p>${applyTabMode==='pending'?'신규 지원자가 없어요':'처리 완료된 내역이 없어요'}</p></div>`;}else{items.forEach(app=>{const sl=app.status==='waiting'?'검토중':app.status==='accepted'?'합격':'불합격';const act=applyTabMode==='pending'&&app.status==='waiting'?`<div class="apply-card-actions"><button class="apply-action-btn accept" onclick="event.stopPropagation();updateAppStatus(${app.id},'accepted')">✅ 합격</button><button class="apply-action-btn reject" onclick="event.stopPropagation();updateAppStatus(${app.id},'rejected')">❌ 불합격</button><button class="apply-action-btn contact" onclick="event.stopPropagation();showToast('📞 기사님에게 연락합니다')">📞 연락</button></div>`:'';html+=`<div class="apply-card status-${app.status}"><div class="apply-card-top"><div class="apply-card-icon driver-icon">🚛</div><div class="apply-card-info"><div class="apply-card-name">${app.driverName}</div><div class="apply-card-meta">${app.driverCareer} · ${app.driverCar}</div></div><span class="apply-status ${app.status}">${sl}</span></div><div class="apply-card-detail"><span class="apply-detail-tag">📍 ${app.driverRegion}</span><span class="apply-detail-tag">🚛 ${app.driverCar}</span><span class="apply-detail-tag">💰 ${app.driverPay}</span></div><div class="apply-card-time">⏰ 지원일: ${app.time}</div>${act}</div>`;});}}else{if(!myJobs.length){html+=`<div class="apply-empty"><span class="empty-icon">📭</span><p>등록한 구인 공고가 없어요</p><p style="font-size:11px;margin-top:8px;color:#bbb">내정보 → 📢 구인 공고 등록하기</p></div>`;}else{myJobs.forEach(j=>{const appsForJob=allRaw.filter(a=>String(a.jobId)===String(j.id));const pend=appsForJob.filter(a=>a.status==='waiting').length;const tot=appsForJob.length;const filterOn=companyApplyJobFilter!=null&&String(companyApplyJobFilter)===String(j.id);html+=`<div class="apply-card apply-job-board-card"><div class="apply-card-top"><div class="apply-card-icon company-icon">📢</div><div class="apply-card-info"><div class="apply-card-name">${j.title}</div><div class="apply-card-meta">${j.company} · ${j.region}</div></div><span class="apply-status accepted">모집중</span></div><div class="apply-card-detail"><span class="apply-detail-tag">📍 ${j.region}</span><span class="apply-detail-tag">🚛 ${j.car}</span><span class="apply-detail-tag">💰 ${j.pay}</span></div><div class="apply-card-time">신규 지원 <b>${pend}</b> · 전체 <b>${tot}</b>명</div><div class="apply-card-actions apply-card-actions-3"><button type="button" class="apply-action-btn contact" onclick="event.stopPropagation();toggleApplyJobFilter(${j.id})">${filterOn?'✕ 필터':'👁 지원자'}</button><button type="button" class="apply-action-btn edit" onclick="event.stopPropagation();openJobEditCompany(${j.id})">✏️ 수정</button><button type="button" class="apply-action-btn delete" onclick="event.stopPropagation();askDeleteJobPost(${j.id})">🗑️ 삭제</button></div></div>`;});}}c.innerHTML=html;}
+function toggleApplyJobFilter(jobId){if(companyApplyJobFilter!=null&&String(companyApplyJobFilter)===String(jobId))companyApplyJobFilter=null;else companyApplyJobFilter=jobId;applyTabMode='pending';renderApplyStatus();}
+function askDeleteJobPost(jobId){const j=getJobPosts().find(x=>String(x.id)===String(jobId));if(!j||!jobPostOwnedByMe(j)){showToast('⚠️ 삭제할 수 없는 공고예요');return;}deleteTarget={type:'job',jobId:j.id};$('delete-confirm-title').textContent='구인 공고를 삭제할까요?';$('delete-confirm-desc').textContent='이 공고에 달린 지원 내역은 목록에서 함께 제거됩니다. 삭제 후 복구할 수 없습니다.';openModal('delete-confirm');}
+function updateAppStatus(appId,newStatus){const apps=getCompanyApps();const app=apps.find(a=>a.id===appId);if(!app)return;app.status=newStatus;saveCompanyApps(apps);const dApps=getDriverApps();const dApp=dApps.find(da=>da.jobId===app.jobId&&da.driverName===app.driverName);if(dApp){dApp.status=newStatus;saveDriverApps(dApps);}const statusText=newStatus==='accepted'?'합격':'불합격';addNotification(newStatus,'driver',`${newStatus==='accepted'?'🎉':'😔'} ${app.jobTitle} - ${statusText}`,`${app.jobTitle} 공고에 ${statusText} 되었습니다.`);renderApplyStatus();updateApplyBadge();showToast(newStatus==='accepted'?'✅ 합격 처리했어요!':'❌ 불합격 처리했어요');}
+
+function applyJob(){const jobs=getJobPosts();const j=jobs.find(x=>String(x.id)===String(currentJobId));if(!j)return;const dApps=getDriverApps();if(dApps.some(a=>String(a.jobId)===String(j.id))){showToast('⚠️ 이미 지원한 공고예요');return;}const driverName=currentUser?currentUser.name:'익명 기사';const now=getNow();dApps.unshift({id:Date.now(),jobId:j.id,jobTitle:j.title,company:j.company,companyname:j.companyname,region:j.region,car:j.car,pay:j.pay,status:'waiting',time:now,driverName});saveDriverApps(dApps);const cApps=getCompanyApps();cApps.unshift({id:Date.now()+1,jobId:j.id,jobTitle:j.title,driverName,driverCar:'정보 없음',driverCareer:'정보 없음',driverRegion:'정보 없음',driverPay:'협의',status:'waiting',time:now});saveCompanyApps(cApps);addNotification('apply','company',`📩 새 지원자 - ${j.title}`,`${driverName}님이 "${j.title}" 공고에 지원했습니다.`);closeDetail('job');renderJobList();updateApplyBadge();showToast('✅ 지원 완료!');}
+function requestDriver(){const drivers=getDriverPosts();const d=drivers.find(x=>x.id===currentDriverId);if(!d)return;const cApps=getCompanyApps();cApps.unshift({id:Date.now(),jobId:'request-'+Date.now(),jobTitle:'직접 지원요청',driverName:d.name,driverCar:d.car,driverCareer:d.career,driverRegion:d.region,driverPay:d.pay,status:'waiting',time:getNow()});saveCompanyApps(cApps);addNotification('apply','driver','📩 지원 요청 도착',`${currentUser?currentUser.name:'운송회사'}에서 지원 요청을 보냈습니다.`);closeDetail('driver');renderDriverList();updateApplyBadge();showToast('📨 지원 요청을 보냈어요!');}
+function renderJobList(){const jobs=getJobPosts().filter(j=>(j.status||'active')==='active');const search=$('d-search')?.value.toLowerCase()||'';const region=$('d-filter-region')?.value||'';const company=$('d-filter-company')?.value||'';const appliedIds=new Set(getDriverApps().map(a=>String(a.jobId)));const filtered=jobs.filter(j=>{if(appliedIds.has(String(j.id)))return false;if(region&&j.region!==region)return false;if(company&&j.company!==company)return false;if(search&&!j.title.toLowerCase().includes(search))return false;return true;});$('d-result-count').textContent=filtered.length;$('d-no-result').style.display=filtered.length===0?'block':'none';$('driver-job-list').innerHTML=filtered.map(j=>`<div class="job-item" onclick="openJobDetail(${j.id})"><div class="job-top"><span class="job-title-text">${j.title}</span><div class="job-badges"><span class="job-badge type-hire">구인</span><span class="job-badge company">${j.company}</span></div></div><p class="job-info">📍 ${j.region} · ${j.workday}</p><p class="job-info">🚛 ${j.car} | ${j.career}</p><p class="job-pay">💰 ${j.pay}</p><p class="tap-hint">탭하여 상세보기 →</p></div>`).join('');}
+function renderCompanyMyJobs(){const box=$('company-my-job-list');if(!box||!currentUser||currentUser.role!=='운송회사'){if(box)box.innerHTML='';return;}const mine=getMyCompanyJobPosts();if(!mine.length){box.innerHTML='<div class="company-my-jobs-empty">등록한 구인 공고가 없어요. 내정보 → 📢 구인 공고 등록하기</div>';return;}box.innerHTML=mine.map(j=>`<div class="job-item job-item-mine" onclick="openJobDetail(${j.id})"><div class="job-top"><span class="job-title-text">${j.title}</span><div class="job-badges"><span class="job-badge type-hire">내 공고</span><span class="job-badge company">${j.company}</span></div></div><p class="job-info">📍 ${j.region} · ${j.workday}</p><p class="job-info">🚛 ${j.car} | ${j.career}</p><p class="job-pay">💰 ${j.pay}</p><p class="tap-hint">탭하여 상세보기 →</p></div>`).join('');}
+function renderDriverList(){const drivers=getDriverPosts().filter(d=>(d.status||'active')==='active');const search=$('c-search')?.value.toLowerCase()||'';const region=$('c-filter-region')?.value||'';const car=$('c-filter-car')?.value||'';const filtered=drivers.filter(d=>{if(region&&d.region!==region)return false;if(car&&!d.car.includes(car))return false;if(search&&!d.name.toLowerCase().includes(search)&&!d.car.toLowerCase().includes(search))return false;return true;});$('c-result-count').textContent=filtered.length;$('c-no-result').style.display=filtered.length===0?'block':'none';$('company-driver-list').innerHTML=filtered.map(d=>`<div class="driver-card" onclick="openDriverDetail(${d.id})"><div class="driver-top"><div class="driver-avatar">🚛</div><div><div class="driver-name">${d.name}</div><div class="driver-career">${d.career} | ${d.car}</div></div><span class="driver-badge">구직중</span></div><div class="driver-tags"><span class="driver-tag">📍 ${d.region}</span><span class="driver-tag">🚛 ${d.car}</span><span class="driver-tag">${d.workday}</span></div><div class="driver-pay">💰 ${d.pay} 희망</div><p class="tap-hint">탭하여 상세보기 →</p></div>`).join('');}
+function filterDriver(){renderJobList()}function filterCompany(){renderDriverList()}
+function openJobDetail(id){const j=getJobPosts().find(x=>String(x.id)===String(id));if(!j)return;currentJobId=j.id;$('dj-company').textContent=j.company;$('dj-title').textContent=j.title;$('dj-pay').textContent='💰 '+j.pay;$('dj-region').textContent=j.region;$('dj-car').textContent=j.car;$('dj-career').textContent=j.career;$('dj-workday').textContent=j.workday;$('dj-salary').textContent=j.pay;$('dj-desc').textContent=j.desc;$('dj-companyname').textContent=j.companyname;$('dj-contact').textContent=j.contact;const applied=getDriverApps().some(a=>String(a.jobId)===String(j.id));const btn=$('btn-apply-job');btn.textContent=applied?'✅ 이미 지원했어요':'🙋 지원하기';btn.style.opacity=applied?'0.6':'1';btn.onclick=applied?()=>showToast('⚠️ 이미 지원한 공고예요'):applyJob;$('detail-job').classList.add('active');}
+function openDriverDetail(id){const d=getDriverPosts().find(x=>x.id===id);if(!d)return;currentDriverId=d.id;$('dd-name').textContent=d.name;$('dd-sub').textContent=d.career+' | '+d.car;$('dd-car').textContent=d.car;$('dd-career').textContent=d.career;$('dd-region').textContent=d.region;$('dd-workday').textContent=d.workday;$('dd-pay').textContent=d.pay;$('dd-intro').textContent=d.intro;$('detail-driver').classList.add('active');}
+function closeDetail(type){$('detail-'+type).classList.remove('active')}
+
+function openJobWrite(type){editingJobId=null;currentJobWriteType=type;const body=$('job-write-body');if(type==='driver'){$('job-write-title').textContent='🙋 구직 신청하기';body.innerHTML=`<div class="jw-group"><label>차량 종류</label><select id="jw-car"><option>1톤 트럭</option><option>2.5톤</option><option>5톤</option><option>냉동탑차</option><option>윙바디</option></select></div><div class="jw-group"><label>경력</label><select id="jw-career"><option>신입</option><option>1~3년</option><option>3~5년</option><option>5~10년</option><option>10년↑</option></select></div><div class="jw-group"><label>희망 지역</label><select id="jw-region"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>전국</option></select></div><div class="jw-group"><label>희망 급여</label><input type="text" id="jw-pay" placeholder="예: 월 400만원 이상"></div><div class="jw-group"><label>근무 희망일</label><select id="jw-workday"><option>주 5일</option><option>주 6일</option><option>협의 가능</option></select></div><div class="jw-group"><label>자기소개</label><textarea id="jw-intro" placeholder="경력, 특기, 자기소개"></textarea></div>`;}else{$('job-write-title').textContent='📢 구인 공고 등록하기';body.innerHTML=`<div class="jw-group"><label>공고 제목</label><input type="text" id="jw-title" placeholder="예: 서울 송파 배송기사 모집"></div><div class="jw-group"><label>택배사</label><select id="jw-company"><option>CJ대한통운</option><option>한진택배</option><option>롯데택배</option><option>쿠팡로지스틱스</option><option>용차</option><option>기타 운송사</option></select></div><div class="jw-group"><label>모집 지역</label><select id="jw-region"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>전국</option></select></div><div class="jw-group"><label>필요 차량</label><select id="jw-car"><option>1톤 트럭</option><option>5톤</option><option>냉동탑차</option><option>무관</option></select></div><div class="jw-group"><label>경력 조건</label><select id="jw-career"><option>신입 가능</option><option>경력 1년↑</option><option>경력 3년↑</option></select></div><div class="jw-group"><label>급여</label><input type="text" id="jw-pay" placeholder="예: 월 400만원~"></div><div class="jw-group"><label>근무일</label><select id="jw-workday"><option>주 5일</option><option>주 6일</option><option>협의 가능</option></select></div><div class="jw-group"><label>연락처</label><input type="text" id="jw-contact" placeholder="010-0000-0000"></div><div class="jw-group"><label>상세 내용</label><textarea id="jw-desc" placeholder="근무 조건, 우대사항 등"></textarea></div>`;const sub=document.querySelector('#job-write-screen .btn-write-submit');if(sub)sub.textContent='등록';}$('job-write-screen').classList.add('active');}
+function openJobEditCompany(jobId){if(!currentUser||currentUser.role!=='운송회사')return;const j=getJobPosts().find(x=>String(x.id)===String(jobId));if(!j||!jobPostOwnedByMe(j)){showToast('⚠️ 수정할 수 없는 공고예요');return;}editingJobId=j.id;currentJobWriteType='company';const body=$('job-write-body');$('job-write-title').textContent='📢 구인 공고 수정';body.innerHTML=`<div class="jw-group"><label>공고 제목</label><input type="text" id="jw-title" placeholder="예: 서울 송파 배송기사 모집"></div><div class="jw-group"><label>택배사</label><select id="jw-company"><option>CJ대한통운</option><option>한진택배</option><option>롯데택배</option><option>쿠팡로지스틱스</option><option>용차</option><option>기타 운송사</option></select></div><div class="jw-group"><label>모집 지역</label><select id="jw-region"><option>서울</option><option>경기</option><option>인천</option><option>부산</option><option>전국</option></select></div><div class="jw-group"><label>필요 차량</label><select id="jw-car"><option>1톤 트럭</option><option>5톤</option><option>냉동탑차</option><option>무관</option></select></div><div class="jw-group"><label>경력 조건</label><select id="jw-career"><option>신입 가능</option><option>경력 1년↑</option><option>경력 3년↑</option></select></div><div class="jw-group"><label>급여</label><input type="text" id="jw-pay" placeholder="예: 월 400만원~"></div><div class="jw-group"><label>근무일</label><select id="jw-workday"><option>주 5일</option><option>주 6일</option><option>협의 가능</option></select></div><div class="jw-group"><label>연락처</label><input type="text" id="jw-contact" placeholder="010-0000-0000"></div><div class="jw-group"><label>상세 내용</label><textarea id="jw-desc" placeholder="근무 조건, 우대사항 등"></textarea></div>`;const sub=document.querySelector('#job-write-screen .btn-write-submit');if(sub)sub.textContent='저장';$('job-write-screen').classList.add('active');requestAnimationFrame(()=>{const ti=$('jw-title');if(ti)ti.value=j.title||'';const co=$('jw-company');if(co)co.value=j.company||co.value;const re=$('jw-region');if(re)re.value=j.region||re.value;const ca=$('jw-car');if(ca)ca.value=j.car||ca.value;const ce=$('jw-career');if(ce)ce.value=j.career||ce.value;const pa=$('jw-pay');if(pa)pa.value=j.pay||'';const wo=$('jw-workday');if(wo)wo.value=j.workday||wo.value;const ct=$('jw-contact');if(ct)ct.value=j.contact||'';const de=$('jw-desc');if(de)de.value=j.desc||'';});}
+function closeJobWrite(){editingJobId=null;$('job-write-screen').classList.remove('active')}
+async function submitJobPost(){
+  if(!currentUser){showToast('⚠️ 로그인 후 이용해 주세요');return;}
+  if(!auth.currentUser){showToast('⚠️ 로그인 세션이 만료됐어요. 다시 로그인해 주세요');return;}
+  const submitBtn=document.querySelector('#job-write-screen .btn-write-submit');
+  if(currentJobWriteType==='driver'){
+    const carEl=$('jw-car'),careerEl=$('jw-career'),regionEl=$('jw-region'),payEl=$('jw-pay'),workEl=$('jw-workday'),introEl=$('jw-intro');
+    if(!carEl||!careerEl||!regionEl){showToast('⚠️ 입력 폼을 불러오지 못했어요. 다시 열어주세요');return;}
+    if(submitBtn)submitBtn.disabled=true;
+    try{
+      const nm=(currentUser.name||'기사').trim()||'기사';
+      const uid=auth.currentUser.uid;
+      const newProf={id:Date.now(),ownerUid:uid,name:nm.charAt(0)+'○○ 기사님',car:carEl.value,career:careerEl.value,region:regionEl.value,pay:(payEl&&payEl.value)||'협의',workday:(workEl&&workEl.value)||'주 5일',intro:(introEl&&introEl.value&&introEl.value.trim())||'자기소개가 없습니다.',status:'active'};
+      const dp=await appendItemToSharedArrayDoc('driverPosts',newProf);
+      setLS('tc_driverPosts',dp);localWriteAt.driverPosts=Date.now();
+      closeJobWrite();
+      showToast('✅ 구직 프로필이 등록됐어요!');
+      goPage('job');
+    }catch(e){
+      if(submitBtn)submitBtn.disabled=false;
+      return;
+    }
+    if(submitBtn)submitBtn.disabled=false;
+    return;
+  }
+  const title=($('jw-title')&&$('jw-title').value||'').trim();
+  if(!title){showToast('⚠️ 공고 제목을 입력해주세요');return;}
+  const coEl=$('jw-company'),regEl=$('jw-region'),carEl=$('jw-car'),careerEl=$('jw-career'),payEl=$('jw-pay'),workEl=$('jw-workday'),contactEl=$('jw-contact'),descEl=$('jw-desc');
+  if(!coEl||!regEl||!carEl||!careerEl){showToast('⚠️ 입력 폼을 불러오지 못했어요. 다시 열어주세요');return;}
+  if(submitBtn)submitBtn.disabled=true;
+  try{
+    const uid=auth.currentUser.uid;
+    if(editingJobId!=null){
+      const old=getJobPosts().find(x=>String(x.id)===String(editingJobId));
+      if(!old||!jobPostOwnedByMe(old)){showToast('⚠️ 수정할 수 없는 공고예요');if(submitBtn)submitBtn.disabled=false;return;}
+      const updated={...old,title,company:coEl.value,region:regEl.value,car:carEl.value,career:careerEl.value,pay:(payEl&&payEl.value)||'협의',workday:(workEl&&workEl.value)||'주 5일',contact:(contactEl&&contactEl.value&&contactEl.value.trim())||'문의주세요',desc:(descEl&&descEl.value&&descEl.value.trim())||'상세 내용이 없습니다.',companyname:(currentUser.name||'').trim()||'운송회사',ownerUid:old.ownerUid||uid,status:old.status||'active'};
+      const jp=await updateItemInSharedArrayDoc('jobPosts',editingJobId,()=>updated);
+      setLS('tc_jobPosts',jp);localWriteAt.jobPosts=Date.now();
+      const jid=String(editingJobId);
+      let ch=false;const cApps=getCompanyApps();
+      cApps.forEach(a=>{if(String(a.jobId)!==jid)return;a.jobTitle=updated.title;a.company=updated.company;a.companyname=updated.companyname;a.region=updated.region;a.car=updated.car;a.pay=updated.pay;ch=true;});
+      if(ch)saveCompanyApps(cApps);
+      let ch2=false;const dApps=getDriverApps();
+      dApps.forEach(a=>{if(String(a.jobId)!==jid)return;a.jobTitle=updated.title;a.company=updated.company;a.companyname=updated.companyname;a.region=updated.region;a.car=updated.car;a.pay=updated.pay;ch2=true;});
+      if(ch2)saveDriverApps(dApps);
+      editingJobId=null;
+      closeJobWrite();
+      showToast('✅ 구인 공고를 수정했어요');
+      goPage('apply-status');
+      renderCompanyMyJobs();renderJobList();renderApplyStatus();updateApplyBadge();
+    }else{
+      const newJob={id:Date.now(),ownerUid:uid,title,company:coEl.value,region:regEl.value,car:carEl.value,career:careerEl.value,pay:(payEl&&payEl.value)||'협의',workday:(workEl&&workEl.value)||'주 5일',contact:(contactEl&&contactEl.value&&contactEl.value.trim())||'문의주세요',desc:(descEl&&descEl.value&&descEl.value.trim())||'상세 내용이 없습니다.',companyname:(currentUser.name||'').trim()||'운송회사',status:'active'};
+      const jp=await appendItemToSharedArrayDoc('jobPosts',newJob);
+      setLS('tc_jobPosts',jp);localWriteAt.jobPosts=Date.now();
+      closeJobWrite();
+      showToast('📢 구인 공고가 등록됐어요! 위쪽 「내 구인 공고」와 기사 화면 구인 목록에서 확인할 수 있어요.');
+      goPage('job');
+    }
+  }catch(e){
+    if(submitBtn)submitBtn.disabled=false;
+    return;
+  }
+  if(submitBtn)submitBtn.disabled=false;
+}
+
+function renderPosts(){
+  const posts=getPosts().filter(p=>(p.status||'active')==='active');
+  const search=$('comm-search')?.value.toLowerCase()||'';
+  const list=$('post-list');
+  const catEmoji={정보공유:'📢',긴급화물:'🚨',질문:'❓',자유:'😄',사고제보:'⚠️'};
+  const filtered=posts.filter(p=>(currentCat==='전체'||p.cat===currentCat)&&(!search||p.title.toLowerCase().includes(search)||p.content.toLowerCase().includes(search)));
+  if(!filtered.length){list.innerHTML='<div style="text-align:center;padding:40px;color:#aaa;font-size:13px"><div style="font-size:40px;margin-bottom:10px">📭</div>게시글이 없어요</div>';return;}
+  list.innerHTML=filtered.map(p=>{const liked=likedPosts.has(p.id);const cmtCount=p.commentList?p.commentList.length:p.comments;const imgHtml=buildCommunityPostMediaHtml(p,'list');return`<div class="post-card"><div class="post-card-body"><div class="post-card-top"><div class="post-avatar">${p.avatar}</div><div class="post-author-info"><div class="post-author-name">${p.author}</div><div class="post-author-meta">${p.role} · ${p.time}</div></div><span class="post-category">${catEmoji[p.cat]||'📝'} ${p.cat}</span></div><div class="post-card-title">${p.title}</div><div class="post-card-preview">${p.content}</div>${imgHtml}<div class="post-card-footer"><button class="like-btn ${liked?'liked':''}" onclick="event.stopPropagation();toggleLike(${p.id})">${liked?'❤️':'🤍'} ${p.likes}</button><button class="like-btn" onclick="event.stopPropagation();openPostDetail(${p.id})">💬 ${cmtCount}</button><span class="view-count">👁 ${p.views}</span></div></div></div>`}).join('');
+}
+function toggleLike(postId){const posts=getPosts();const p=posts.find(x=>x.id===postId);if(!p)return;if(likedPosts.has(postId)){likedPosts.delete(postId);p.likes=Math.max(0,p.likes-1);}else{likedPosts.add(postId);p.likes++;}savePosts(posts);saveLikedPosts(likedPosts);renderPosts();}
+function openPostDetail(postId){const posts=getPosts();const p=posts.find(x=>x.id===postId);if(!p)return;currentPostId=postId;p.views++;savePosts(posts);const catEmoji={정보공유:'📢',긴급화물:'🚨',질문:'❓',자유:'😄',사고제보:'⚠️'};const liked=likedPosts.has(p.id);const cmtList=p.commentList||[];const imgHtml=buildCommunityPostMediaHtml(p,'detail');$('post-detail-body').innerHTML=`<div class="post-detail-hero"><div class="post-detail-top"><div class="post-detail-avatar">${p.avatar}</div><div class="post-detail-author"><div class="pda-name">${p.author}</div><div class="pda-meta">${p.role} · ${p.time}</div></div><span class="post-detail-cat">${catEmoji[p.cat]||'📝'} ${p.cat}</span></div><div class="post-detail-title">${p.title}</div><div class="post-detail-content">${p.content}</div>${imgHtml}</div><div class="post-detail-stats"><button class="like-btn ${liked?'liked':''}" onclick="toggleLikeDetail(${p.id})">${liked?'❤️':'🤍'} 좋아요 ${p.likes}</button><span>💬 댓글 ${cmtList.length}</span><span>👁 ${p.views}</span></div><div class="comment-section"><div class="comment-section-title">💬 댓글 ${cmtList.length}개</div>${cmtList.length===0?'<div style="text-align:center;padding:20px;color:#bbb;font-size:12px">아직 댓글이 없어요</div>':''}${cmtList.map(c=>`<div class="comment-item"><div class="comment-avatar">${c.avatar||'?'}</div><div class="comment-body"><div class="comment-author">${c.author}<span class="comment-time">${c.time}</span></div><div class="comment-text">${c.text}</div></div></div>`).join('')}</div><div style="height:60px"></div>`;$('comment-input').value='';$('detail-post').classList.add('active');}
+function toggleLikeDetail(postId){toggleLike(postId);openPostDetail(postId);}
+function submitComment(){const text=$('comment-input').value.trim();if(!text){showToast('⚠️ 댓글을 입력해주세요');return;}const posts=getPosts();const p=posts.find(x=>x.id===currentPostId);if(!p)return;if(!p.commentList)p.commentList=[];p.commentList.push({id:Date.now(),author:currentUser?currentUser.name:'익명',avatar:currentUser?(currentUser.name||'익').charAt(0):'익',text,time:'방금'});p.comments=p.commentList.length;savePosts(posts);$('comment-input').value='';openPostDetail(currentPostId);showToast('💬 댓글이 등록됐어요!');}
+function setCat(cat){currentCat=cat;document.querySelectorAll('.comm-ftab').forEach(b=>b.classList.toggle('active',b.textContent.includes(cat)||(cat==='전체'&&b.textContent==='전체')));renderPosts();}
+function filterPosts(){renderPosts()}
+function openWrite(){writeMode='new';editingPostId=null;writtenImgs=[];clearCommunityVideoDraft();$('write-title').value='';$('write-content').value='';$('write-cat').value='정보공유';$('write-submit-btn').textContent='등록';$('write-submit-btn').onclick=submitPost;renderWriteImgs();$('write-screen').classList.add('active');}
+function openEditPost(postId){const p=getPosts().find(x=>x.id===postId);if(!p)return;writeMode='edit';editingPostId=postId;writtenImgs=[...(p.imgs||[])];clearCommunityVideoDraft();if(p.video&&isPostVideoUrl(p.video))communityVideoDraft={mode:'keep',url:p.video};$('write-title').value=p.title;$('write-content').value=p.content;$('write-cat').value=p.cat;$('write-submit-btn').textContent='저장';$('write-submit-btn').onclick=saveEditPost;renderWriteImgs();$('write-screen').classList.add('active');}
+function closeWrite(){clearCommunityVideoDraft();$('write-screen').classList.remove('active')}
+function clearCommunityVideoDraft(){if(communityVideoDraft&&communityVideoDraft.mode==='new'&&communityVideoDraft.previewUrl){try{URL.revokeObjectURL(communityVideoDraft.previewUrl)}catch(e){}}communityVideoDraft=null;}
+function handleCommunityVideoUpload(e){const inp=e.target;const file=inp.files&&inp.files[0];inp.value='';if(!file)return;const okType=file.type&&file.type.startsWith('video/');const okExt=/\.(mp4|webm|mov|m4v)$/i.test(file.name||'');if(!okType&&!okExt){showToast('⚠️ 동영상 파일만 올릴 수 있어요');return;}if(file.size>COMMUNITY_VIDEO_MAX_BYTES){showToast('⚠️ 파일이 너무 커요. 30초 안쪽·짧게 촬영해 주세요');return;}const url=URL.createObjectURL(file);const vid=document.createElement('video');vid.muted=true;vid.playsInline=true;vid.preload='metadata';vid.src=url;try{vid.load()}catch(err){}const bad=function(){try{URL.revokeObjectURL(url)}catch(err){}};vid.onloadedmetadata=function(){if(!isFinite(vid.duration)||vid.duration<=0||vid.duration>COMMUNITY_VIDEO_MAX_SEC+0.5){bad();showToast('⚠️ 동영상은 30초 이하만 올릴 수 있어요');return;}if(communityVideoDraft&&communityVideoDraft.mode==='new'&&communityVideoDraft.previewUrl){try{URL.revokeObjectURL(communityVideoDraft.previewUrl)}catch(err){}}communityVideoDraft={mode:'new',file,previewUrl:url};renderWriteImgs();};vid.onerror=function(){bad();showToast('⚠️ 동영상을 불러올 수 없어요');};}
+function removeCommunityVideo(){if(communityVideoDraft&&communityVideoDraft.mode==='new'&&communityVideoDraft.previewUrl){try{URL.revokeObjectURL(communityVideoDraft.previewUrl)}catch(e){}}communityVideoDraft=null;renderWriteImgs();}
+function handleImgUpload(e){const files=e.target.files;if(!files||!files.length)return;const remaining=5-writtenImgs.length;if(remaining<=0){showToast('⚠️ 최대 5장까지 첨부 가능');return;}const toRead=Math.min(files.length,remaining);let loaded=0;for(let i=0;i<toRead;i++){const reader=new FileReader();reader.onload=function(ev){writtenImgs.push(ev.target.result);loaded++;if(loaded===toRead)renderWriteImgs();};reader.readAsDataURL(files[i]);}e.target.value='';}
+function removeImg(i){writtenImgs.splice(i,1);renderWriteImgs();}
+function renderWriteImgs(){const list=$('write-img-list');list.innerHTML='';if(communityVideoDraft){const src=communityVideoDraft.mode==='new'?communityVideoDraft.previewUrl:communityVideoDraft.url;const box=document.createElement('div');box.className='write-video-box';box.innerHTML=`<video controls playsinline preload="metadata" src="${htmlAttrEscape(src)}"></video><button type="button" class="write-img-remove" onclick="removeCommunityVideo()">✕</button><span class="write-video-label">🎬 미리보기 · 최대 ${COMMUNITY_VIDEO_MAX_SEC}초</span>`;list.appendChild(box);}writtenImgs.forEach((img,i)=>{const d=document.createElement('div');d.className='write-img-thumb-item';d.innerHTML=(isRenderablePostImage(img)?`<img src="${img}">`:`<span>${img}</span>`)+`<button type="button" class="write-img-remove" onclick="removeImg(${i})">✕</button>`;list.appendChild(d);});const row=document.createElement('div');row.className='write-attach-row';if(writtenImgs.length<5){const add=document.createElement('div');add.className='write-img-add';add.onclick=()=>$('real-img-upload').click();add.innerHTML='<span>📷</span><p>사진추가</p>';row.appendChild(add);}if(!communityVideoDraft){const addV=document.createElement('div');addV.className='write-img-add';addV.onclick=()=>$('real-video-upload').click();addV.innerHTML='<span>🎬</span><p>동영상</p>';row.appendChild(addV);}if(row.childNodes.length)list.appendChild(row);}
+async function submitPost(){const t=$('write-title').value.trim(),c=$('write-content').value.trim(),cat=$('write-cat').value;if(!t){showToast('⚠️ 제목을 입력해주세요');return;}if(!c){showToast('⚠️ 내용을 입력해주세요');return;}const hasNewImg=writtenImgs.some(x=>typeof x==='string'&&x.startsWith('data:'));const hasNewVid=communityVideoDraft&&communityVideoDraft.mode==='new';if((hasNewImg||hasNewVid)&&!auth.currentUser){showToast('⚠️ 사진·동영상 첨부는 로그인 후 가능해요');return;}const btn=$('write-submit-btn');btn.disabled=true;let imgs=[...writtenImgs];try{imgs=await uploadCommunityPostImages(writtenImgs);}catch(e){console.warn(e);if(e.message==='auth-required-for-images'||e.code==='storage/unauthorized'){showToast('⚠️ 업로드 권한이 없어요. 로그인 후 다시 시도해 주세요.');btn.disabled=false;return;}showToast('⚠️ 사진 업로드에 실패했어요. 텍스트만 등록합니다.');imgs=writtenImgs.filter(x=>!String(x).startsWith('data:'));}let videoUrl;try{if(communityVideoDraft){if(communityVideoDraft.mode==='keep')videoUrl=communityVideoDraft.url;else if(communityVideoDraft.mode==='new'&&communityVideoDraft.file)videoUrl=await uploadCommunityPostVideo(communityVideoDraft.file);}}catch(e){console.warn(e);showToast('⚠️ 동영상 업로드에 실패했어요');btn.disabled=false;return;}clearCommunityVideoDraft();const posts=getPosts();const row={id:Date.now(),author:currentUser?.name||'익명',avatar:(currentUser?.name||'익').charAt(0),role:currentUser?.role||'회원',cat,time:'방금',title:t,content:c,imgs,likes:0,comments:0,views:1,status:'active',commentList:[]};if(videoUrl)row.video=videoUrl;posts.unshift(row);setLS('tc_posts',posts);localWriteAt.posts=Date.now();try{await syncToFirestore('posts',posts);}catch(e){btn.disabled=false;return;}btn.disabled=false;closeWrite();currentCat='전체';setCat('전체');renderPosts();renderHomeFeed();updateActivityBadge();showToast('✅ 게시글이 등록됐어요!');}
+async function saveEditPost(){const posts=getPosts();const p=posts.find(x=>x.id===editingPostId);if(!p)return;const t=$('write-title').value.trim(),c=$('write-content').value.trim(),cat=$('write-cat').value;if(!t){showToast('⚠️ 제목을 입력해주세요');return;}if(!c){showToast('⚠️ 내용을 입력해주세요');return;}const hasNewImg=writtenImgs.some(x=>typeof x==='string'&&x.startsWith('data:'));const hasNewVid=communityVideoDraft&&communityVideoDraft.mode==='new';if((hasNewImg||hasNewVid)&&!auth.currentUser){showToast('⚠️ 사진·동영상 첨부는 로그인 후 가능해요');return;}const btn=$('write-submit-btn');btn.disabled=true;let imgs=[...writtenImgs];try{imgs=await uploadCommunityPostImages(writtenImgs);}catch(e){console.warn(e);if(e.message==='auth-required-for-images'||e.code==='storage/unauthorized'){showToast('⚠️ 업로드 권한이 없어요. 로그인 후 다시 시도해 주세요.');btn.disabled=false;return;}showToast('⚠️ 사진 업로드에 실패했어요. 텍스트만 반영합니다.');imgs=writtenImgs.filter(x=>!String(x).startsWith('data:'));}let videoUrl;try{if(!communityVideoDraft)videoUrl=null;else if(communityVideoDraft.mode==='keep')videoUrl=communityVideoDraft.url;else if(communityVideoDraft.mode==='new'&&communityVideoDraft.file)videoUrl=await uploadCommunityPostVideo(communityVideoDraft.file);}catch(e){console.warn(e);showToast('⚠️ 동영상 업로드에 실패했어요');btn.disabled=false;return;}clearCommunityVideoDraft();p.title=t;p.content=c;p.cat=cat;p.imgs=imgs;if(videoUrl)p.video=videoUrl;else delete p.video;setLS('tc_posts',posts);localWriteAt.posts=Date.now();try{await syncToFirestore('posts',posts);}catch(e){btn.disabled=false;return;}btn.disabled=false;closeWrite();renderMyActivity();renderPosts();renderHomeFeed();showToast('✅ 게시글이 수정됐어요!');}
+
+function changeMonth(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCal();updateMonthlySummary();}
+function renderCal(){const mn=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];$('cal-title').textContent=`${calYear}년 ${mn[calMonth]}`;const grid=$('cal-grid');grid.innerHTML='';['일','월','화','수','목','금','토'].forEach((d,i)=>{const e=document.createElement('div');e.className='cal-day-header'+(i===0?' sun':i===6?' sat':'');e.textContent=d;grid.appendChild(e);});const fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),today=new Date();const dayRecords=getDayRecords();for(let i=0;i<fd;i++){grid.appendChild(document.createElement('div')).className='cal-day';}for(let d=1;d<=dim;d++){const dow=new Date(calYear,calMonth,d).getDay(),key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const has=!!dayRecords[key],isT=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;const e=document.createElement('div');let cls='cal-day';if(dow===0)cls+=' sun';if(dow===6)cls+=' sat';if(isT)cls+=' today';if(has)cls+=' has-data';e.className=cls;e.innerHTML=`<span>${d}</span>${has?'<div class="dot"></div>':''}`;e.onclick=()=>openDayRecord(key,d);grid.appendChild(e);}}
+function openDayRecord(key,day){selectedDayKey=key;$('day-record-title').textContent=`📅 ${calYear}년 ${calMonth+1}월 ${day}일`;const r=getDayRecords()[key]||{};$('input-delivery').value=r.delivery||'';$('input-return').value=r.return||'';$('input-other').value=r.other||'';$('input-fuel').value=r.fuel||'';$('input-supplies').value=r.supplies||'';$('input-misc').value=r.misc||'';$('input-memo').value=r.memo||'';openModal('day-record');}
+function saveDayRecord(){const d=parseInt($('input-delivery').value)||0,r=parseInt($('input-return').value)||0,o=parseInt($('input-other').value)||0,f=parseInt($('input-fuel').value)||0,s=parseInt($('input-supplies').value)||0,mi=parseInt($('input-misc').value)||0,m=$('input-memo').value.trim();const records=getDayRecords();records[selectedDayKey]={delivery:d,return:r,other:o,fuel:f,supplies:s,misc:mi,memo:m};saveDayRecords(records);closeModal('day-record');renderCal();updateMonthlySummary();showToast('✅ 기록이 저장됐어요!');}
+function updateMonthlySummary(){let tD=0,tR=0,tO=0;const p=`${calYear}-${String(calMonth+1).padStart(2,'0')}-`;const records=getDayRecords();Object.keys(records).forEach(k=>{if(k.startsWith(p)){const r=records[k];tD+=r.delivery||0;tR+=r.return||0;tO+=r.other||0;}});$('sum-delivery').textContent=tD;$('sum-return').textContent=tR;$('sum-other').textContent=tO;}
+/* ================================================================
+   스케줄러: 이번달 요약 초기화 + 자정 자동 갱신
+================================================================ */
+const SCHEDULER_RESET_VERSION = '2026-04-02-01';
+let scheduleAutoRefreshStarted = false;
+
+function resetCurrentMonthDayRecordsOnUpdateOnce() {
+  const flagKey = `tc_dayRecords_reset_${SCHEDULER_RESET_VERSION}`;
+  if(localStorage.getItem(flagKey) === '1') return;
+
+  const ymPrefix = `${calYear}-${String(calMonth+1).padStart(2,'0')}-`;
+  const records = getDayRecords();
+
+  let changed = false;
+  Object.keys(records).forEach((k) => {
+    if(k.startsWith(ymPrefix)) {
+      delete records[k];
+      changed = true;
+    }
+  });
+
+  if(changed) saveDayRecords(records);
+  localStorage.setItem(flagKey, '1');
+}
+
+function startScheduleAutoRefresh() {
+  if(scheduleAutoRefreshStarted) return;
+  scheduleAutoRefreshStarted = true;
+
+  let lastDateStr = new Date().toDateString();
+  setInterval(() => {
+    const now = new Date();
+    const dateStr = now.toDateString();
+    if(dateStr === lastDateStr) return;
+
+    lastDateStr = dateStr;
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+
+    const schedulePage = $('page-schedule');
+    if(schedulePage && schedulePage.classList.contains('active')) {
+      renderCal();
+      updateMonthlySummary();
+      calcSalary();
+    }
+  }, 60000); // 1분 단위로 날짜 변경 여부만 감지
+}
+
+function calcSalary(){
+  // 기본급/주유비/소모품비 입력줄은 화면에서 제거했으므로,
+  // 일별 기록에 저장된 비용(tFuel/tSupplies/tMisc)만 차감해서 계산합니다.
+  const dp = parseInt($('calc-delivery-price')?.value) || 0;
+  const rp = parseInt($('calc-return-price')?.value) || 0;
+  const op = parseInt($('calc-other-price')?.value) || 0;
+
+  const p = `${calYear}-${String(calMonth+1).padStart(2,'0')}-`;
+  let tD = 0, tR = 0, tO = 0;
+  let tFuel = 0, tSupplies = 0, tMisc = 0;
+
+  const records = getDayRecords();
+  Object.keys(records).forEach((k) => {
+    if(k.startsWith(p)) {
+      const r = records[k];
+      tD += r.delivery || 0;
+      tR += r.return || 0;
+      tO += r.other || 0;
+      tFuel += r.fuel || 0;
+      tSupplies += r.supplies || 0;
+      tMisc += r.misc || 0;
+    }
+  });
+
+  const gross = (tD * dp) + (tR * rp) + (tO * op);
+  const total = gross - tFuel - tSupplies - tMisc;
+
+  $('calc-result').style.display = 'block';
+  $('calc-amount').textContent = total.toLocaleString() + '원';
+  $('calc-breakdown').textContent =
+    `배송 ${(tD*dp).toLocaleString()}원 + 반품 ${(tR*rp).toLocaleString()}원 + 기타 ${(tO*op).toLocaleString()}원 ` +
+    `- 주유비 ${tFuel.toLocaleString()}원 - 소모품비 ${tSupplies.toLocaleString()}원 - 기타잡비 ${tMisc.toLocaleString()}원`;
+}
+
+/* ================================================================
+   홈 날씨 인사말(키 없이: Open-Meteo)
+================================================================ */
+const WEATHER_CACHE_KEY = 'tc_weather_cache_v1';
+const WEATHER_CACHE_MS = 10 * 60 * 1000; // 10분
+let homeWeatherAutoRefreshStarted = false;
+
+function weatherDescFromCode(code){
+  if(code === 0) return '맑음';
+  if(code === 1) return '대체로 맑음';
+  if(code === 2) return '구름 조금';
+  if(code === 3) return '구름 많음';
+  if(code === 45 || code === 48) return '안개';
+  if(code >= 51 && code <= 57) return '이슬비';
+  if(code >= 61 && code <= 67) return '비';
+  if(code >= 71 && code <= 77) return '눈';
+  if(code >= 80 && code <= 82) return '소나기';
+  if(code >= 85 && code <= 86) return '눈/소나기';
+  if(code >= 95 && code <= 99) return '천둥번개';
+  return '날씨';
+}
+
+function getTimeOfDayKo(now){
+  const h = now.getHours();
+  if(h < 5) return '새벽';
+  if(h < 12) return '아침';
+  if(h < 17) return '점심';
+  if(h < 21) return '저녁';
+  return '밤';
+}
+
+async function fetchOpenMeteoCurrent(lat, lon){
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,weather_code&timezone=Asia%2FSeoul`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('weather fetch failed');
+  const data = await res.json();
+  return data?.current || null;
+}
+
+async function updateHomeWeatherGreeting(){
+  const el = $('home-weather-greeting');
+  if(!el) return;
+
+  try{
+    const cached = getLS(WEATHER_CACHE_KEY, null);
+    if(cached && cached.ts && (Date.now() - cached.ts) < WEATHER_CACHE_MS && cached.current){
+      const now = new Date();
+      const desc = weatherDescFromCode(cached.current.weather_code);
+      const temp = Math.round(cached.current.temperature_2m);
+      el.textContent = `${getTimeOfDayKo(now)}에 ${desc} ( ${temp}°C ). 안전운행하세요!`;
+      return;
+    }
+
+    const defaultLat = 37.5665;
+    const defaultLon = 126.9780;
+
+    const coords = await new Promise((resolve) => {
+      if(!navigator.geolocation) return resolve({ lat: defaultLat, lon: defaultLon });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        () => resolve({ lat: defaultLat, lon: defaultLon }),
+        { timeout: 7000, maximumAge: 600000 }
+      );
+    });
+
+    const current = await fetchOpenMeteoCurrent(coords.lat, coords.lon);
+    if(!current) return;
+
+    const now = new Date();
+    const desc = weatherDescFromCode(current.weather_code);
+    const temp = Math.round(current.temperature_2m);
+    el.textContent = `${getTimeOfDayKo(now)}에 ${desc} ( ${temp}°C ). 안전운행하세요!`;
+
+    setLS(WEATHER_CACHE_KEY, { ts: Date.now(), current });
+  }catch(e){
+    // 실패해도 기본 문구 유지
+    el.textContent = '오늘도 안전 운행하세요!';
+  }
+}
+
+function startHomeWeatherAutoRefresh(){
+  // 날씨 기능이 꺼져있을 수 있어, 호출되지 않더라도 안전하게 유지
+  // (현재 UI에서 호출 로직을 제거했음)
+}
+
+function switchTab(t){document.querySelector('.tabs').style.display='flex';document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',t==='login'?i===0:i===1));document.querySelector('.login-form').style.display=t==='login'?'block':'none';document.querySelector('.register-form').style.display=t==='register'?'block':'none';$('success-inner').style.display='none';hideAllErrors();}
+function selectRole(el,role){document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');selectedRole=role;}
+function hideAllErrors(){document.querySelectorAll('.error').forEach(e=>e.style.display='none');}
+function showSuccess(icon,title,desc){document.querySelector('.login-form').style.display='none';document.querySelector('.register-form').style.display='none';document.querySelector('.tabs').style.display='none';$('success-inner').style.display='block';$('success-icon').textContent=icon;$('success-title').textContent=title;$('success-desc').textContent=desc;}
+
+async function goToApp(){if(!currentUser)return;$('screen-login').classList.remove('active');$('screen-app').classList.add('active');$('header-name').textContent=currentUser.name+'님';$('header-role').textContent=currentUser.role;$('profile-name').textContent=currentUser.name;$('profile-email').textContent=currentUser.email;$('profile-role').textContent=currentUser.role;const av=$('profile-avatar');const savedImg=localStorage.getItem('avatar_img');if(savedImg){av.innerHTML=`<img src="${savedImg}"><span class="avatar-edit-hint">사진변경</span>`;}else{av.innerHTML=(currentUser.role==='운송회사'?'🏢':'🚛')+`<span class="avatar-edit-hint">사진변경</span>`;}$('btn-driver-action').style.display=currentUser.role==='화물기사'?'flex':'none';$('btn-company-action').style.display=currentUser.role==='운송회사'?'flex':'none';showToast('📡 데이터 불러오는 중...');try{await loadSharedDataFromFirestore();if(currentUser.uid)await loadPrivateDataFromFirestore(currentUser.uid);likedPosts=getLikedPosts();}catch(err){}mergeExampleJobPostsOnce();setupRealtimeListeners();startSharedDataAutoRefresh();renderCal();updateMonthlySummary();renderPosts();updateApplyBadge();updateBellDot();updateActivityBadge();renderHomeNotifications();renderHomeFeed();goPage('home');localStorage.removeItem('notice_hide_until');showNoticePopup();}
+async function tryAutoLogin(){
+  try{
+    const user = await new Promise(resolve => {
+      const unsub = auth.onAuthStateChanged((u) => { unsub(); resolve(u); });
+    });
+    if(!user) return false;
+    if(!isLoginSessionValid()){
+      await auth.signOut();
+      clearLoginSession();
+      return false;
+    }
+    const doc = await db.collection('users').doc(user.uid).get();
+    if(!doc.exists) return false;
+    currentUser = doc.data();
+    if(currentUser.status === 'suspended'){
+      await auth.signOut();
+      clearLoginSession();
+      currentUser = null;
+      return false;
+    }
+    await goToApp();
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function uploadAvatar(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){localStorage.setItem('avatar_img',ev.target.result);$('profile-avatar').innerHTML=`<img src="${ev.target.result}"><span class="avatar-edit-hint">사진변경</span>`;showToast('✅ 프로필 사진이 변경됐어요!');};reader.readAsDataURL(file);}
+
+function showNoticePopup(){if(!currentUser)return;const key='notice_hide_'+currentUser.email;const hideUntil=localStorage.getItem(key);if(hideUntil){if(new Date().getTime()<parseInt(hideUntil))return;else localStorage.removeItem(key);}const notices=getNotices();if(!notices||!notices.length)return;$('notice-popup-body').innerHTML=notices.map(n=>`<div class="notice-popup-item"><span class="np-icon">${n.icon}</span><div class="np-body"><div class="np-title">${n.title}${n.isNew?'<span class="np-new">NEW</span>':''}</div><div class="np-desc">${n.desc}</div></div></div>`).join('');$('notice-today-check').checked=false;$('notice-popup').classList.add('active');}
+function closeNoticePopup(){if($('notice-today-check').checked&&currentUser){const now=new Date();const midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,0);localStorage.setItem('notice_hide_'+currentUser.email,String(midnight.getTime()));}$('notice-popup').classList.remove('active');}
+
+function setActivityTab(tab){activityTab=tab;document.querySelectorAll('#activity-tabs .apply-tab').forEach((b,i)=>b.classList.toggle('active',tab==='posts'?i===0:i===1));renderMyActivity();}
+function renderMyActivity(){const container=$('my-activity-content');if(!currentUser){container.innerHTML='';return;}const myName=currentUser.name;const posts=getPosts();if(activityTab==='posts'){const myPosts=posts.filter(p=>p.author===myName);if(!myPosts.length){container.innerHTML='<div class="apply-empty"><span class="empty-icon">📝</span><p>작성한 게시글이 없어요</p></div>';return;}container.innerHTML=myPosts.map(p=>`<div class="activity-card"><div class="activity-card-top"><div class="activity-card-icon post-icon">📝</div><div class="activity-card-info"><div class="activity-card-title">${p.title}</div><div class="activity-card-meta">${p.cat} · ${p.time} · 👍${p.likes} 💬${p.commentList?p.commentList.length:p.comments}</div></div></div><div class="activity-card-preview">${p.content}</div><div class="activity-card-actions"><button class="activity-action-btn view" onclick="openPostDetail(${p.id})">👁 보기</button><button class="activity-action-btn edit" onclick="openEditPost(${p.id})">✏️ 수정</button><button class="activity-action-btn delete" onclick="askDeletePost(${p.id})">🗑️ 삭제</button></div></div>`).join('');}else{let myComments=[];posts.forEach(p=>{if(p.commentList){p.commentList.forEach(c=>{if(c.author===myName)myComments.push({postId:p.id,postTitle:p.title,...c});});}});if(!myComments.length){container.innerHTML='<div class="apply-empty"><span class="empty-icon">💬</span><p>작성한 댓글이 없어요</p></div>';return;}container.innerHTML=myComments.map(c=>`<div class="activity-card"><div class="activity-card-top"><div class="activity-card-icon comment-icon">💬</div><div class="activity-card-info"><div class="activity-card-title">${c.postTitle}</div><div class="activity-card-meta">게시글에 남긴 댓글 · ${c.time}</div></div></div><div class="activity-card-preview">${c.text}</div><div class="activity-card-actions"><button class="activity-action-btn view" onclick="openPostDetail(${c.postId})">👁 원글보기</button><button class="activity-action-btn edit" onclick="openEditComment(${c.postId},${c.id})">✏️ 수정</button><button class="activity-action-btn delete" onclick="askDeleteComment(${c.postId},${c.id})">🗑️ 삭제</button></div></div>`).join('');}}
+function updateActivityBadge(){if(!currentUser)return;const myName=currentUser.name;const posts=getPosts();const postCount=posts.filter(p=>p.author===myName).length;let cmtCount=0;posts.forEach(p=>{if(p.commentList)p.commentList.forEach(c=>{if(c.author===myName)cmtCount++;});});const total=postCount+cmtCount;const badge=$('menu-activity-badge');if(total>0){badge.style.display='inline';badge.textContent=total;}else badge.style.display='none';}
+function openEditComment(postId,commentId){const p=getPosts().find(x=>x.id===postId);if(!p||!p.commentList)return;const c=p.commentList.find(x=>x.id===commentId);if(!c)return;editingCommentInfo={postId,commentId};$('edit-comment-text').value=c.text;openModal('edit-comment');}
+function saveEditComment(){if(!editingCommentInfo)return;const posts=getPosts();const p=posts.find(x=>x.id===editingCommentInfo.postId);if(!p||!p.commentList)return;const c=p.commentList.find(x=>x.id===editingCommentInfo.commentId);if(!c)return;const text=$('edit-comment-text').value.trim();if(!text){showToast('⚠️ 댓글을 입력해주세요');return;}c.text=text;savePosts(posts);closeModal('edit-comment');renderMyActivity();showToast('✅ 댓글이 수정됐어요!');}
+function askDeletePost(postId){deleteTarget={type:'post',postId};$('delete-confirm-title').textContent='게시글을 삭제하시겠어요?';$('delete-confirm-desc').textContent='게시글과 모든 댓글이 함께 삭제됩니다.';openModal('delete-confirm');}
+function askDeleteComment(postId,commentId){deleteTarget={type:'comment',postId,commentId};$('delete-confirm-title').textContent='댓글을 삭제하시겠어요?';$('delete-confirm-desc').textContent='삭제하면 복구할 수 없습니다.';openModal('delete-confirm');}
+function confirmDelete(){if(!deleteTarget)return;if(deleteTarget.type==='job'){const jid=deleteTarget.jobId;(async()=>{try{const arr=await removeItemFromSharedArrayDoc('jobPosts',jid);setLS('tc_jobPosts',arr);localWriteAt.jobPosts=Date.now();const js=String(jid);saveCompanyApps(getCompanyApps().filter(a=>String(a.jobId)!==js));saveDriverApps(getDriverApps().filter(a=>String(a.jobId)!==js));deleteTarget=null;closeModal('delete-confirm');if(companyApplyJobFilter!=null&&String(companyApplyJobFilter)===js)companyApplyJobFilter=null;showToast('🗑️ 구인 공고를 삭제했어요');renderApplyStatus();updateApplyBadge();renderCompanyMyJobs();renderJobList();renderHomeFeed();}catch(e){}})();return;}let posts=getPosts();if(deleteTarget.type==='post'){posts=posts.filter(p=>p.id!==deleteTarget.postId);showToast('🗑️ 게시글이 삭제됐어요');}else{const p=posts.find(x=>x.id===deleteTarget.postId);if(p&&p.commentList){p.commentList=p.commentList.filter(c=>c.id!==deleteTarget.commentId);p.comments=p.commentList.length;}showToast('🗑️ 댓글이 삭제됐어요');}savePosts(posts);deleteTarget=null;closeModal('delete-confirm');renderMyActivity();renderPosts();renderHomeFeed();updateActivityBadge();}
+
+function goPage(page){const pc=$('page-content');if(pc){if(page==='home')pc.classList.add('home-feed-mode');else pc.classList.remove('home-feed-mode')}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const pageEl=$('page-'+page);if(pageEl)pageEl.classList.add('active');const navIdx=['community','job','home','schedule','myinfo'].indexOf(page);if(navIdx>=0)document.querySelectorAll('.nav-btn')[navIdx].classList.add('active');if(page==='home'){renderHomeNotifications();renderHomeFeed();}if(page==='job'){const isD=currentUser&&currentUser.role==='화물기사',isC=currentUser&&currentUser.role==='운송회사';$('job-driver-view').style.display=isD?'block':'none';$('job-company-view').style.display=isC?'block':'none';if(isD)renderJobList();if(isC){renderCompanyMyJobs();renderDriverList();}}if(page==='community')renderPosts();if(page==='schedule'){calYear=(new Date()).getFullYear();calMonth=(new Date()).getMonth();resetCurrentMonthDayRecordsOnUpdateOnce();renderCal();updateMonthlySummary();startScheduleAutoRefresh();calcSalary();}if(page==='notification')renderNotifications();if(page==='myinfo'){updateApplyBadge();updateBellDot();updateActivityBadge();if(currentUser)$('edit-name').value=currentUser.name||'';}if(page==='apply-status'){applyTabMode='pending';renderApplyStatus();}if(page==='my-activity'){activityTab='posts';setActivityTab('posts');}}
+
+function toggleAllConsent(){const all=$('consent-all').checked;$('consent-terms').checked=all;$('consent-privacy').checked=all;$('consent-marketing').checked=all;}
+function updateConsentAll(){$('consent-all').checked=$('consent-terms').checked&&$('consent-privacy').checked&&$('consent-marketing').checked;}
+
+const DEFAULT_TERMS=`운송 커뮤니티 이용약관\n\n제1조 (목적)\n이 약관은 운송 커뮤니티(이하 "서비스")가 제공하는 모든 서비스의 이용 조건 및 절차, 회사와 회원 간의 권리·의무 및 책임사항을 규정하는 것을 목적으로 합니다.\n\n제2조 (정의)\n1. "서비스"란 회사가 제공하는 운송 커뮤니티 관련 모든 서비스를 말합니다.\n2. "회원"이란 서비스에 가입하여 이용하는 자를 말합니다.\n3. "화물기사"란 화물운송을 업으로 하는 회원을 말합니다.\n4. "운송회사"란 화물운송 사업을 영위하는 법인 또는 개인사업자 회원을 말합니다.\n\n제3조 (서비스의 제공)\n1. 구인·구직 정보 제공\n2. 커뮤니티 (게시판, 댓글)\n3. 스케줄 및 급여 관리 도구\n4. 알림 서비스\n\n제4조 (회원가입)\n1. 이용자는 서비스가 정한 양식에 따라 회원정보를 기입한 후 약관에 동의하여 회원가입을 신청합니다.\n2. 서비스는 제1항과 같이 신청한 자 중 다음 각 호에 해당하지 않는 한 회원으로 등록합니다.\n\n제5조 (회원 탈퇴 및 자격 상실)\n1. 회원은 언제든지 서비스 내에서 탈퇴를 요청할 수 있으며, 서비스는 즉시 처리합니다.\n2. 탈퇴 시 회원의 모든 데이터는 관련 법령에 따라 보관 후 파기합니다.`;
+const DEFAULT_PRIVACY=`개인정보 수집·이용 동의서\n\n1. 수집하는 개인정보 항목\n- 필수: 이름(회사명), 이메일, 비밀번호\n- 선택: 연락처, 프로필 사진\n- 자동수집: 서비스 이용기록, 접속 로그\n\n2. 개인정보의 수집·이용 목적\n- 회원가입 및 서비스 이용자 식별\n- 구인·구직 매칭 서비스 제공\n- 커뮤니티 서비스 제공\n- 서비스 관련 공지사항 전달\n- 서비스 개선 및 통계 분석\n\n3. 개인정보의 보유·이용 기간\n- 회원 탈퇴 시까지\n\n4. 개인정보의 제3자 제공\n- 원칙적으로 제3자에게 제공하지 않습니다.\n\n5. 개인정보의 파기\n- 회원 탈퇴 요청 시 지체없이 파기합니다.\n\n6. 이용자의 권리\n- 개인정보 열람, 정정, 삭제, 처리정지를 요구할 수 있습니다.\n\n7. 개인정보 보호책임자\n- 이메일: privacy@transport-community.com`;
+const DEFAULT_MARKETING=`마케팅 정보 수신 동의 (선택)\n\n1. 수신 정보: 신규 구인공고 알림, 이벤트, 혜택 안내\n2. 수신 방법: 앱 푸시 알림, 이메일\n3. 동의를 거부할 권리가 있으며, 거부 시에도 서비스 이용에 제한이 없습니다.\n4. 수신 거부: 앱 내 설정 또는 고객센터를 통해 언제든지 철회 가능`;
+function getTermsContent(type){const saved=getLS('tc_termsData',{});if(type==='terms')return saved.terms||DEFAULT_TERMS;if(type==='privacy')return saved.privacy||DEFAULT_PRIVACY;if(type==='marketing')return saved.marketing||DEFAULT_MARKETING;return'';}
+function openTermsModal(type){const titles={terms:'📄 이용약관',privacy:'🔐 개인정보 수집·이용 동의',marketing:'📢 마케팅 정보 수신 동의'};$('terms-view-title').textContent=titles[type]||'약관';$('terms-view-body').textContent=getTermsContent(type);openModal('terms-view');}
+
+/* ★★★ PWA 서비스워커 + 설치 배너 ★★★ */
+let deferredPrompt=null;
+const APP_CACHE_CLEAR_VERSION = '2026-04-02-force-clear-01';
+async function clearOldServiceWorkerCachesOnce(){
+  try{
+    const key = 'tc_cache_clear_version';
+    if(localStorage.getItem(key) === APP_CACHE_CLEAR_VERSION) return;
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k)=>caches.delete(k)));
+    }
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r)=>r.unregister()));
+    }
+    localStorage.setItem(key, APP_CACHE_CLEAR_VERSION);
+  }catch(e){}
+}
+if('serviceWorker' in navigator){window.addEventListener('load',async function(){await clearOldServiceWorkerCachesOnce();navigator.serviceWorker.register('/sw.js').then(function(reg){console.log('SW registered:',reg.scope)}).catch(function(err){console.warn('SW error:',err)})});}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;var dismissed=localStorage.getItem('pwa_dismissed');if(!dismissed||Date.now()-parseInt(dismissed)>86400000){setTimeout(function(){var b=document.getElementById('pwa-install-banner');if(b)b.classList.add('show')},5000);}});
+function installPWA(){if(!deferredPrompt){showToast('📲 브라우저 메뉴에서 홈 화면에 추가를 선택해주세요');return;}deferredPrompt.prompt();deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted')showToast('✅ 앱이 설치됐어요!');deferredPrompt=null;document.getElementById('pwa-install-banner').classList.remove('show')});}
+function dismissPWA(){document.getElementById('pwa-install-banner').classList.remove('show');localStorage.setItem('pwa_dismissed',String(Date.now()));}
+window.addEventListener('appinstalled',function(){showToast('✅ 운사트 앱이 설치되었습니다!');document.getElementById('pwa-install-banner').classList.remove('show')});
+
+/* ★★★ 스플래시 + 초기화 ★★★ */
+(async function(){
+  const splash=$('splash-screen');
+  initPullToRefresh();
+  try{await initDemoData();}catch(e){}
+  const kakaoLoggedIn=await handleKakaoCallback();
+  let naverLoggedIn=false;
+  if(!kakaoLoggedIn){naverLoggedIn=await handleNaverCallback();}
+  try{initNaverLogin();}catch(e){}
+  setTimeout(()=>{splash.classList.add('fade-out');setTimeout(async()=>{splash.style.display='none';
+    if((kakaoLoggedIn||naverLoggedIn)&&currentUser){
+      const provider=kakaoLoggedIn?'카카오':'네이버';
+      $('screen-login').classList.add('active');
+      showSuccess(kakaoLoggedIn?'💬':'🟢',currentUser.name+'님 환영합니다!',provider+'로 로그인했어요!');
+    }else{
+      const autoLoggedIn = await tryAutoLogin();
+      if(!autoLoggedIn){
+        $('screen-login').classList.add('active');
+      }
+    }
+  },800)},2000);
+})();
+</script>
+</body>
+</html>

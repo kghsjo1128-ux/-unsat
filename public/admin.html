@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>운송 커뮤니티 · 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ★★★ Firebase SDK ★★★ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+
+<style>
+:root {
+  --bg-body: #0c0e14;
+  --bg-sidebar: #11131b;
+  --bg-card: #161923;
+  --bg-card-hover: #1c1f2e;
+  --bg-input: #1a1d2a;
+  --border: #252838;
+  --border-active: #4f6ef7;
+  --text-primary: #e8eaf0;
+  --text-secondary: #8a8fa8;
+  --text-muted: #555a70;
+  --accent: #4f6ef7;
+  --accent-light: rgba(79,110,247,.12);
+  --accent-glow: rgba(79,110,247,.25);
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,.1);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,.1);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,.1);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,.1);
+  --cyan: #22d3ee;
+  --cyan-bg: rgba(34,211,238,.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,.3);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,.5);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== ADMIN LOGIN SCREEN ===== */
+.admin-login-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg-body);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.admin-login-screen.hidden { display: none; }
+.admin-login-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  width: 400px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.admin-login-box .login-icon { font-size: 48px; margin-bottom: 16px; }
+.admin-login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.admin-login-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.admin-login-box .form-group { text-align: left; margin-bottom: 16px; }
+.admin-login-box .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.admin-login-box .form-input {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-family: inherit; font-size: 13px; outline: none;
+}
+.admin-login-box .form-input:focus { border-color: var(--accent); }
+.admin-login-box .btn-login {
+  width: 100%; padding: 14px; background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-sm); font-size: 14px;
+  font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 8px;
+}
+.admin-login-box .btn-login:hover { background: #6583f9; }
+.admin-login-box .btn-login:disabled { opacity: .5; cursor: not-allowed; }
+.admin-login-box .login-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+.admin-login-box .admin-hint { font-size: 11px; color: var(--text-muted); margin-top: 16px; }
+
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  z-index: 100;
+  transition: transform var(--transition);
+}
+.sidebar-brand {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.sidebar-brand-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(79,110,247,.3);
+}
+.sidebar-brand h1 { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+.sidebar-brand small { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; font-weight: 400; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-group-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; padding: 12px 12px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-secondary);
+  font-size: 13px; font-weight: 500;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+.nav-item.active { background: var(--accent-light); color: var(--accent); }
+.nav-item.active::before {
+  content: ''; position: absolute;
+  left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
+}
+.nav-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; min-width: 20px; text-align: center; display: none; }
+
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.admin-avatar {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+}
+.admin-info { flex: 1; }
+.admin-info .name { font-size: 13px; font-weight: 600; }
+.admin-info .role { font-size: 11px; color: var(--text-muted); }
+.btn-admin-logout { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 11px; cursor: pointer; font-family: inherit; }
+.btn-admin-logout:hover { color: var(--red); border-color: var(--red); }
+
+.main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  height: 60px; background: rgba(12,14,20,.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 28px;
+  position: sticky; top: 0; z-index: 50; gap: 16px;
+}
+.topbar-title { font-size: 17px; font-weight: 700; flex: 1; }
+.topbar-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 7px 14px; width: 280px;
+  transition: border-color var(--transition);
+}
+.topbar-search:focus-within { border-color: var(--accent); }
+.topbar-search input { background: none; border: none; outline: none; color: var(--text-primary); font-size: 13px; font-family: inherit; width: 100%; }
+.topbar-search input::placeholder { color: var(--text-muted); }
+.topbar-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+
+.content { flex: 1; padding: 28px; overflow-y: auto; }
+
+.page { display: none; animation: fadeIn .3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; position: relative; overflow: hidden; transition: all var(--transition);
+}
+.stat-card:hover { border-color: var(--border-active); transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card::after { content: ''; position: absolute; top: 0; right: 0; width: 80px; height: 80px; border-radius: 50%; opacity: .06; transform: translate(20px, -20px); }
+.stat-card.blue::after { background: var(--accent); }
+.stat-card.green::after { background: var(--green); }
+.stat-card.amber::after { background: var(--amber); }
+.stat-card.purple::after { background: var(--purple); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.stat-card.blue .stat-icon { background: var(--accent-light); }
+.stat-card.green .stat-icon { background: var(--green-bg); }
+.stat-card.amber .stat-icon { background: var(--amber-bg); }
+.stat-card.purple .stat-icon { background: var(--purple-bg); }
+.stat-trend { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+.stat-trend.up { background: var(--green-bg); color: var(--green); }
+.stat-value { font-size: 28px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+
+.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 28px; }
+.chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.chart-card .subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), rgba(79,110,247,.4)); transition: height .6s cubic-bezier(.4,0,.2,1); min-height: 4px; }
+.bar:hover { filter: brightness(1.3); }
+.bar-label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.bar-val { font-size: 10px; color: var(--text-secondary); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+.donut-chart { display: flex; align-items: center; gap: 20px; }
+.donut-visual { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+.donut-visual::after { content: ''; width: 70px; height: 70px; border-radius: 50%; background: var(--bg-card); position: absolute; }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend-val { margin-left: auto; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+
+.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.table-header h3 { font-size: 15px; font-weight: 700; }
+.table-actions { display: flex; gap: 8px; align-items: center; }
+.filter-select { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; font-size: 12px; padding: 7px 12px; outline: none; cursor: pointer; }
+.filter-select:focus { border-color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(0,0,0,.15); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg-card-hover); }
+tbody td { padding: 12px 16px; font-size: 13px; vertical-align: middle; white-space: nowrap; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge.driver { background: var(--accent-light); color: var(--accent); }
+.badge.company { background: var(--green-bg); color: var(--green); }
+.badge.waiting { background: var(--amber-bg); color: var(--amber); }
+.badge.accepted { background: var(--green-bg); color: var(--green); }
+.badge.rejected { background: var(--red-bg); color: var(--red); }
+.badge.active-status { background: var(--green-bg); color: var(--green); }
+.badge.hidden { background: var(--red-bg); color: var(--red); }
+.badge.info { background: var(--accent-light); color: var(--accent); }
+.badge.purple-b { background: var(--purple-bg); color: var(--purple); }
+
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.user-avatar.av-driver { background: linear-gradient(135deg, var(--accent), #7c3aed); }
+.user-avatar.av-company { background: linear-gradient(135deg, var(--green), #059669); }
+.user-name { font-weight: 600; }
+.user-email { font-size: 11px; color: var(--text-muted); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; transition: all var(--transition); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #6583f9; box-shadow: 0 4px 16px rgba(79,110,247,.3); }
+.btn-danger { background: var(--red-bg); color: var(--red); }
+.btn-danger:hover { background: rgba(248,113,113,.2); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg-card); color: var(--text-primary); }
+.btn-success { background: var(--green-bg); color: var(--green); }
+.btn-success:hover { background: rgba(52,211,153,.2); }
+.btn-warning { background: var(--amber-bg); color: var(--amber); }
+.btn-warning:hover { background: rgba(251,191,36,.2); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 480px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg); animation: modalIn .25s ease; }
+@keyframes modalIn { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px; }
+.modal-close:hover { color: var(--text-primary); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.form-input { width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); }
+.form-input:focus { border-color: var(--accent); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+
+.activity-list { display: flex; flex-direction: column; }
+.activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-dot.blue { background: var(--accent); }
+.activity-dot.green { background: var(--green); }
+.activity-dot.red { background: var(--red); }
+.activity-dot.amber { background: var(--amber); }
+.activity-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.activity-text strong { color: var(--text-primary); font-weight: 600; }
+.activity-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+.toast { position: fixed; bottom: 32px; right: 32px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 300; transform: translateY(120%); transition: transform .3s cubic-bezier(.4,0,.2,1); }
+.toast.show { transform: translateY(0); }
+.toast-icon { font-size: 18px; }
+
+.post-preview { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
+
+@media(max-width:1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .chart-grid { grid-template-columns: 1fr; } }
+@media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } .main { margin-left: 0; } .stats-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ===== 관리자 로그인 화면 ===== -->
+<div class="admin-login-screen" id="admin-login-screen">
+  <div class="admin-login-box">
+    <div class="login-icon">🔐</div>
+    <h2>관리자 로그인</h2>
+    <p>운송 커뮤니티 관리자 콘솔</p>
+    <div class="form-group">
+      <label>이메일</label>
+      <input class="form-input" id="admin-email" type="email" placeholder="관리자 이메일">
+    </div>
+    <div class="form-group">
+      <label>비밀번호</label>
+      <input class="form-input" id="admin-pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <button class="btn-login" id="btn-admin-login" onclick="adminLogin()">로그인</button>
+    <div class="login-error" id="admin-login-error">이메일 또는 비밀번호가 틀렸습니다</div>
+    <div class="admin-hint">⚠️ 등록된 관리자만 접속할 수 있습니다</div>
+  </div>
+</div>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="main-sidebar" style="display:none">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">🚛</div>
+    <div><h1>운송 커뮤니티</h1><small>관리자 콘솔</small></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">메인</div>
+    <div class="nav-item active" onclick="goPage('dashboard')"><span class="nav-icon">📊</span>대시보드</div>
+    <div class="nav-group-label">관리</div>
+    <div class="nav-item" onclick="goPage('members')"><span class="nav-icon">👥</span>회원 관리<span class="nav-badge" id="nav-member-count">0</span></div>
+    <div class="nav-item" onclick="goPage('jobs')"><span class="nav-icon">💼</span>구인/구직 관리<span class="nav-badge" id="nav-job-count">0</span></div>
+    <div class="nav-item" onclick="goPage('community')"><span class="nav-icon">💬</span>커뮤니티 관리<span class="nav-badge" id="nav-post-count">0</span></div>
+    <div class="nav-item" onclick="goPage('applications')"><span class="nav-icon">📋</span>지원 현황<span class="nav-badge" id="nav-app-count">0</span></div>
+    <div class="nav-group-label">시스템</div>
+    <div class="nav-item" onclick="goPage('notices')"><span class="nav-icon">📢</span>공지사항 관리</div>
+    <div class="nav-item" onclick="goPage('terms')"><span class="nav-icon">📄</span>약관/방침 관리</div>
+    <div class="nav-item" onclick="goPage('consent')"><span class="nav-icon">✅</span>동의 이력<span class="nav-badge" id="nav-consent-count">0</span></div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-avatar" id="admin-avatar-char">A</div>
+    <div class="admin-info"><div class="name" id="admin-display-name">관리자</div><div class="role">Admin</div></div>
+    <button class="btn-admin-logout" onclick="adminLogout()">로그아웃</button>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="main" id="main-content" style="display:none">
+  <header class="topbar">
+    <div class="topbar-title" id="topbar-title">대시보드</div>
+    <div class="topbar-search"><span style="color:var(--text-muted)">🔍</span><input type="text" id="global-search" placeholder="회원, 공고, 게시글 검색..." oninput="handleGlobalSearch()"></div>
+    <div class="topbar-time" id="topbar-time"></div>
+  </header>
+
+  <div class="content">
+    <!-- 대시보드 -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-top"><div class="stat-icon">👥</div><span class="stat-trend up">실시간</span></div><div class="stat-value" id="stat-members">0</div><div class="stat-label">전체 회원 수</div></div>
+        <div class="stat-card green"><div class="stat-top"><div class="stat-icon">💼</div><span class="stat-trend up">실시간</span></div><div class="stat-value" id="stat-jobs">0</div><div class="stat-label">등록 공고 수</div></div>
+        <div class="stat-card amber"><div class="stat-top"><div class="stat-icon">💬</div><span class="stat-trend up">실시간</span></div><div class="stat-value" id="stat-posts">0</div><div class="stat-label">커뮤니티 게시글</div></div>
+        <div class="stat-card purple"><div class="stat-top"><div class="stat-icon">📋</div><span class="stat-trend up">실시간</span></div><div class="stat-value" id="stat-apps">0</div><div class="stat-label">누적 지원 건수</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>📈 최근 활동</h3><div class="subtitle">관리자 로그</div><div class="activity-list" id="activity-list"></div></div>
+        <div class="chart-card"><h3>🔥 인기 게시글</h3><div class="subtitle">좋아요 기준 Top 5</div><div id="popular-posts"></div></div>
+      </div>
+      <div class="table-card" style="margin-bottom:20px">
+        <div class="table-header">
+          <h3>📅 월별 운영 통계 (DB 입력)</h3>
+          <div class="table-actions">
+            <button class="btn btn-ghost btn-sm" onclick="fillMonthlyStatsFromCurrent()">현재 데이터로 자동 채우기</button>
+            <button class="btn btn-ghost btn-sm" onclick="autoAggregateMonthlyStats()">앱 데이터로 상세 자동집계</button>
+          </div>
+        </div>
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end">
+          <div class="form-group" style="margin:0"><label>기준 월</label><input class="form-input" id="ms-month" type="month"></div>
+          <div class="form-group" style="margin:0"><label>구인 광고 수</label><input class="form-input" id="ms-job-hire" type="number" min="0" placeholder="0"></div>
+          <div class="form-group" style="margin:0"><label>구직 광고 수</label><input class="form-input" id="ms-job-seek" type="number" min="0" placeholder="0"></div>
+          <div class="form-group" style="margin:0"><label>피드 수</label><input class="form-input" id="ms-feed" type="number" min="0" placeholder="0"></div>
+          <div class="form-group" style="margin:0"><label>사용자 수</label><input class="form-input" id="ms-users" type="number" min="0" placeholder="0"></div>
+          <div class="form-group" style="margin:0"><label>방문 수</label><input class="form-input" id="ms-visits" type="number" min="0" placeholder="0"></div>
+          <div class="form-group" style="margin:0"><label>게시글 작성 수</label><input class="form-input" id="ms-post-writes" type="number" min="0" placeholder="0"></div>
+        </div>
+        <div style="padding:12px 20px;display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-primary" onclick="saveMonthlyStats()">💾 월 통계 저장</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>기준월</th><th>구인광고</th><th>구직광고</th><th>피드</th><th>사용자수</th><th>방문수</th><th>게시글작성수</th><th>수정시각</th></tr>
+            </thead>
+            <tbody id="monthly-stats-tbody"></tbody>
+          </table>
+        </div>
+        <div id="monthly-stats-detail" style="padding:14px 20px;border-top:1px solid var(--border)"></div>
+      </div>
+    </div>
+
+    <!-- 회원 관리 -->
+    <div class="page" id="page-members">
+      <div class="table-card">
+        <div class="table-header"><h3>👥 회원 목록</h3><div class="table-actions"><select class="filter-select" id="member-role-filter" onchange="renderMembers()"><option value="">전체 역할</option><option value="화물기사">🚛 화물기사</option><option value="운송회사">🏢 운송회사</option></select></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>회원</th><th>역할</th><th>가입일</th><th>상태</th><th style="text-align:right">관리</th></tr></thead><tbody id="member-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 구인/구직 관리 -->
+    <div class="page" id="page-jobs">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="stat-card green"><div class="stat-value" id="stat-job-hire" style="font-size:22px">0</div><div class="stat-label">구인 공고</div></div>
+        <div class="stat-card blue"><div class="stat-value" id="stat-job-seek" style="font-size:22px">0</div><div class="stat-label">구직 프로필</div></div>
+        <div class="stat-card amber"><div class="stat-value" id="stat-job-pending" style="font-size:22px">0</div><div class="stat-label">대기중 지원</div></div>
+      </div>
+      <div class="table-card" style="margin-bottom:20px">
+        <div class="table-header"><h3>📢 구인 공고</h3></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>공고명</th><th>회사</th><th>지역</th><th>차량</th><th>급여</th><th style="text-align:right">관리</th></tr></thead><tbody id="job-tbody"></tbody></table></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>🙋 구직 프로필</h3></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>기사명</th><th>차량</th><th>경력</th><th>지역</th><th>희망 급여</th><th style="text-align:right">관리</th></tr></thead><tbody id="driver-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 커뮤니티 관리 -->
+    <div class="page" id="page-community">
+      <div class="table-card">
+        <div class="table-header"><h3>💬 게시글 관리</h3><div class="table-actions"><select class="filter-select" id="post-cat-filter" onchange="renderPosts()"><option value="">전체 카테고리</option><option value="정보공유">📢 정보공유</option><option value="긴급화물">🚨 긴급화물</option><option value="질문">❓ 질문</option><option value="자유">😄 자유</option><option value="사고제보">⚠️ 사고제보</option></select></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>카테고리</th><th>❤️</th><th>💬</th><th>👁</th><th>상태</th><th style="text-align:right">관리</th></tr></thead><tbody id="post-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 지원 현황 -->
+    <div class="page" id="page-applications">
+      <div class="table-card">
+        <div class="table-header"><h3>📋 전체 지원 내역</h3><div class="table-actions"><select class="filter-select" id="app-status-filter" onchange="renderApplications()"><option value="">전체 상태</option><option value="waiting">⏳ 대기중</option><option value="accepted">✅ 합격</option><option value="rejected">❌ 불합격</option></select></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>지원자</th><th>공고명</th><th>상태</th><th style="text-align:right">관리</th></tr></thead><tbody id="app-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 공지사항 -->
+    <div class="page" id="page-notices">
+      <div class="table-card">
+        <div class="table-header"><h3>📢 공지사항</h3><div class="table-actions"><button class="btn btn-primary" onclick="openAddNoticeModal()">+ 공지 추가</button></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th></th><th>제목</th><th>설명</th><th>NEW</th><th style="text-align:right">관리</th></tr></thead><tbody id="notice-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- 약관 관리 -->
+    <div class="page" id="page-terms">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="stat-card blue" style="cursor:pointer" onclick="editTerms('terms')"><div class="stat-icon" style="margin-bottom:8px">📄</div><div class="stat-label" style="font-size:13px;font-weight:700;color:var(--text-primary)">이용약관</div><div class="stat-label" style="margin-top:4px">클릭하여 수정</div></div>
+        <div class="stat-card green" style="cursor:pointer" onclick="editTerms('privacy')"><div class="stat-icon" style="margin-bottom:8px">🔐</div><div class="stat-label" style="font-size:13px;font-weight:700;color:var(--text-primary)">개인정보처리방침</div><div class="stat-label" style="margin-top:4px">클릭하여 수정</div></div>
+        <div class="stat-card purple" style="cursor:pointer" onclick="editTerms('marketing')"><div class="stat-icon" style="margin-bottom:8px">📢</div><div class="stat-label" style="font-size:13px;font-weight:700;color:var(--text-primary)">마케팅 수신 동의</div><div class="stat-label" style="margin-top:4px">클릭하여 수정</div></div>
+      </div>
+      <div class="table-card"><div class="table-header"><h3>📝 약관 편집기</h3><div class="table-actions"><span style="font-size:12px;color:var(--text-muted)" id="terms-edit-label">카드를 클릭하여 편집할 약관을 선택하세요</span></div></div><div style="padding:20px" id="terms-editor-area"><div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:40px;margin-bottom:12px">📄</div><p>위의 카드를 클릭하면 해당 약관을 편집할 수 있습니다</p></div></div></div>
+    </div>
+
+    <!-- 동의 이력 -->
+    <div class="page" id="page-consent">
+      <div class="table-card">
+        <div class="table-header"><h3>✅ 회원 약관 동의 이력</h3></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>회원</th><th>역할</th><th>이용약관</th><th>개인정보</th><th>마케팅</th><th>동의일시</th></tr></thead><tbody id="consent-tbody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달들 -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="width:400px">
+    <div class="modal-header"><h3 id="confirm-title">확인</h3><button class="modal-close" onclick="closeModal('confirm')">✕</button></div>
+    <div class="modal-body"><p id="confirm-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6"></p></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('confirm')">취소</button><button class="btn btn-danger" id="confirm-btn">확인</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notice">
+  <div class="modal">
+    <div class="modal-header"><h3>공지사항 추가</h3><button class="modal-close" onclick="closeModal('notice')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>아이콘 (이모지)</label><input class="form-input" id="mn-icon" placeholder="🎉" maxlength="4"></div>
+      <div class="form-group"><label>제목</label><input class="form-input" id="mn-title" placeholder="공지 제목"></div>
+      <div class="form-group"><label>설명</label><textarea class="form-input" id="mn-desc" placeholder="공지 내용"></textarea></div>
+      <div class="form-group"><label>NEW 표시</label><select class="form-input" id="mn-new"><option value="true">표시</option><option value="false">비표시</option></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('notice')">취소</button><button class="btn btn-primary" onclick="saveNotice()">저장</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-post-detail">
+  <div class="modal" style="width:560px">
+    <div class="modal-header"><h3 id="mpd-title">게시글 상세</h3><button class="modal-close" onclick="closeModal('post-detail')">✕</button></div>
+    <div class="modal-body" id="mpd-body"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('post-detail')">닫기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-text"></span></div>
+
+<script>
+/* ================================================================
+   ★★★ Firebase 초기화 ★★★
+================================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbBCc7EHTTjI3VxfvuzFtV3fsZfj9H_jU",
+  authDomain: "transport-community-c5fc1.firebaseapp.com",
+  projectId: "transport-community-c5fc1",
+  storageBucket: "transport-community-c5fc1.firebasestorage.app",
+  messagingSenderId: "72501800775",
+  appId: "1:72501800775:web:007a8f17272b10cf7c2662",
+  measurementId: "G-EC6QE2KWCM"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ================================================================
+   ★★★ 관리자 이메일 목록 (여기에 본인 이메일 추가!) ★★★
+   ※ firestore.rules 의 adminEmails() 와 반드시 동일하게 맞추세요.
+      다르면 관리자 패널은 열리지만 Firestore 읽기/쓰기가 거절될 수 있습니다.
+================================================================ */
+const ADMIN_EMAILS = [
+  // ↓↓↓ 여기에 본인 이메일을 넣으세요 ↓↓↓
+  'hohohorhrh@naver.com',
+  // 예시: 'myemail@gmail.com',
+];
+
+let adminUser = null;
+
+/* ================================================================
+   ★★★ 관리자 로그인 ★★★
+================================================================ */
+async function adminLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pw = document.getElementById('admin-pw').value;
+  if(!email || !pw) { showLoginError('이메일과 비밀번호를 입력해주세요'); return; }
+  
+  const btn = document.getElementById('btn-admin-login');
+  btn.disabled = true; btn.textContent = '로그인 중...';
+  
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pw);
+    // 관리자 권한 확인
+    const userDoc = await db.collection('users').doc(cred.user.uid).get();
+    const isAdmin = ADMIN_EMAILS.includes(email) || (userDoc.exists && userDoc.data().isAdmin === true);
+    
+    if(!isAdmin) {
+      await auth.signOut();
+      showLoginError('관리자 권한이 없는 계정입니다');
+      return;
+    }
+    
+    adminUser = userDoc.exists ? userDoc.data() : { name: email.split('@')[0], email };
+    showAdminPanel();
+  } catch(err) {
+    console.error('로그인 에러:', err);
+    if(err.code==='auth/user-not-found'||err.code==='auth/wrong-password'||err.code==='auth/invalid-credential') {
+      showLoginError('이메일 또는 비밀번호가 틀렸습니다');
+    } else {
+      showLoginError('로그인 실패: ' + err.message);
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '로그인';
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('admin-login-error');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function showAdminPanel() {
+  document.getElementById('admin-login-screen').classList.add('hidden');
+  document.getElementById('main-sidebar').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'flex';
+  document.getElementById('admin-display-name').textContent = adminUser.name || '관리자';
+  document.getElementById('admin-avatar-char').textContent = (adminUser.name || 'A').charAt(0);
+  loadAllData();
+}
+
+async function adminLogout() {
+  try { await auth.signOut(); } catch(e) {}
+  adminUser = null;
+  document.getElementById('admin-login-screen').classList.remove('hidden');
+  document.getElementById('main-sidebar').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+}
+
+/* ================================================================
+   ★★★ Firestore 데이터 읽기/쓰기 (app.html과 동일 구조) ★★★
+================================================================ */
+function getLS(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+function setLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function syncToFirestore(key, data) {
+  db.collection('sharedData').doc(key).set({ data: JSON.stringify(data), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .catch(err => console.warn('Firestore sync error:', err));
+}
+
+// 데이터 읽기 (localStorage 캐시에서)
+function getData(key) { return getLS('tc_' + key, []); }
+function getDataObj(key) { return getLS('tc_' + key, {}); }
+
+// 데이터 저장 (localStorage + Firestore)
+function saveData(key, data) {
+  setLS('tc_' + key, data);
+  syncToFirestore(key === 'posts' ? 'posts' : key === 'jobPosts' ? 'jobPosts' : key === 'driverPosts' ? 'driverPosts' : key === 'driverApps' ? 'driverApps' : key === 'companyApps' ? 'companyApps' : key === 'notices' ? 'notices' : key, data);
+}
+
+// Firestore에서 전체 데이터 불러오기
+async function loadAllData() {
+  showToast('📡', '데이터 불러오는 중...');
+  const keys = ['posts','jobPosts','driverPosts','driverApps','companyApps','notices'];
+  for(const k of keys) {
+    try {
+      const doc = await db.collection('sharedData').doc(k).get();
+      if(doc.exists && doc.data().data) {
+        setLS('tc_' + k, JSON.parse(doc.data().data));
+      }
+    } catch(e) { console.warn('Load error:', k, e); }
+  }
+  
+  // 회원 목록은 Firestore users 컬렉션에서 불러오기
+  try {
+    const snap = await db.collection('users').get();
+    const members = [];
+    snap.forEach(doc => { members.push({...doc.data(), uid: doc.id}); });
+    setLS('fs_members', members);
+  } catch(e) { console.warn('회원 로드 에러:', e); }
+  
+  // 동의 이력
+  try {
+    const snap = await db.collection('consentLog').orderBy('time','desc').limit(100).get();
+    const logs = [];
+    snap.forEach(doc => logs.push(doc.data()));
+    setLS('tc_consentLog', logs);
+  } catch(e) { console.warn('동의이력 로드 에러:', e); }
+
+  // termsData (월별 통계 저장용 포함)
+  try {
+    const termsDoc = await db.collection('sharedData').doc('termsData').get();
+    if(termsDoc.exists && termsDoc.data().data) {
+      setLS('tc_termsData', JSON.parse(termsDoc.data().data));
+    }
+  } catch(e) { console.warn('termsData 로드 에러:', e); }
+  
+  // 실시간 리스너 설정
+  setupRealtimeListeners();
+  
+  // 뱃지 기준점 초기화
+  initBadgeBaseline();
+  updateAllBadges();
+  
+  renderDashboard();
+  showToast('✅', '데이터 로드 완료');
+}
+
+function setupRealtimeListeners() {
+  const keys = ['posts','jobPosts','driverPosts','driverApps','companyApps'];
+  keys.forEach(k => {
+    db.collection('sharedData').doc(k).onSnapshot(doc => {
+      if(doc.exists && doc.data().data) {
+        const oldData = getLS('tc_' + k, []);
+        const newData = JSON.parse(doc.data().data);
+        setLS('tc_' + k, newData);
+        
+        // 새 항목 감지 → 뱃지 업데이트
+        if(Array.isArray(newData) && newData.length > oldData.length) {
+          const diff = newData.length - oldData.length;
+          if(k==='posts') { addUnseen('community', diff); showToast('💬', `새 게시글 ${diff}건이 등록되었습니다`); }
+          if(k==='jobPosts'||k==='driverPosts') { addUnseen('jobs', diff); showToast('💼', `새 구인/구직 ${diff}건이 등록되었습니다`); }
+          if(k==='driverApps'||k==='companyApps') { addUnseen('applications', diff); showToast('📋', `새 지원 ${diff}건이 접수되었습니다`); }
+        }
+        
+        updateAllBadges();
+        const currentPage = document.querySelector('.page.active')?.id?.replace('page-','');
+        if(currentPage === 'dashboard') renderDashboard();
+        if(currentPage === 'community' && k==='posts') renderPosts();
+        if(currentPage === 'jobs' && (k==='jobPosts'||k==='driverPosts')) renderJobs();
+        if(currentPage === 'applications') renderApplications();
+      }
+    }, err => console.warn('리스너 에러:', err));
+  });
+  
+  // 회원 실시간 감시
+  db.collection('users').onSnapshot(snap => {
+    const oldMembers = getMembers();
+    const members = [];
+    snap.forEach(doc => members.push({...doc.data(), uid: doc.id}));
+    setLS('fs_members', members);
+    if(members.length > oldMembers.length) {
+      const diff = members.length - oldMembers.length;
+      addUnseen('members', diff);
+      showToast('👥', `새 회원 ${diff}명이 가입했습니다`);
+    }
+    updateAllBadges();
+    const currentPage = document.querySelector('.page.active')?.id?.replace('page-','');
+    if(currentPage === 'dashboard') renderDashboard();
+    if(currentPage === 'members') renderMembers();
+  }, err => console.warn('회원 리스너 에러:', err));
+}
+
+// 회원 목록 (Firestore users 컬렉션)
+function getMembers() { return getLS('fs_members', []); }
+
+/* ================================================================
+   UTILITIES
+================================================================ */
+function showToast(icon, text) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-text').textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
+
+let confirmAction = null;
+function showConfirm(title, desc, action) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-desc').textContent = desc;
+  confirmAction = action;
+  document.getElementById('confirm-btn').onclick = () => { if(confirmAction) confirmAction(); closeModal('confirm'); };
+  openModal('confirm');
+}
+
+function addActivity(type, text) {
+  const log = getLS('admin_activityLog', []);
+  const now = new Date();
+  log.unshift({ type, text, time: `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}` });
+  if(log.length > 20) log.length = 20;
+  setLS('admin_activityLog', log);
+}
+
+/* ================================================================
+   ★★★ 뱃지 시스템 (새 항목만 표시, 확인하면 사라짐) ★★★
+================================================================ */
+// 미확인 수 가져오기/설정
+function getUnseen(page) { return parseInt(localStorage.getItem('admin_unseen_' + page) || '0'); }
+function setUnseen(page, count) { localStorage.setItem('admin_unseen_' + page, String(Math.max(0, count))); }
+function addUnseen(page, count) { setUnseen(page, getUnseen(page) + count); }
+function clearUnseen(page) { setUnseen(page, 0); }
+
+// 모든 뱃지 업데이트
+function updateAllBadges() {
+  const badgeMap = {
+    members: 'nav-member-count',
+    jobs: 'nav-job-count',
+    community: 'nav-post-count',
+    applications: 'nav-app-count',
+    consent: 'nav-consent-count',
+  };
+  for(const [page, elId] of Object.entries(badgeMap)) {
+    const el = document.getElementById(elId);
+    const count = getUnseen(page);
+    if(el) {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'inline' : 'none';
+    }
+  }
+}
+
+// 초기 뱃지 세팅 (처음 로드 시 현재 데이터 수를 기준점으로 저장)
+function initBadgeBaseline() {
+  // 이미 기준점이 있으면 건너뜀
+  if(localStorage.getItem('admin_baseline_set')) return;
+  localStorage.setItem('admin_baseline_set', 'true');
+  // 모든 미확인 0으로 초기화
+  ['members','jobs','community','applications','consent'].forEach(p => clearUnseen(p));
+}
+
+/* ================================================================
+   PAGE NAVIGATION
+================================================================ */
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if(el) el.classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const pageMap = { dashboard:0, members:1, jobs:2, community:3, applications:4, notices:5, terms:6, consent:7 };
+  if(pageMap[page] !== undefined) navItems[pageMap[page]]?.classList.add('active');
+  const titles = { dashboard:'대시보드', members:'회원 관리', jobs:'구인/구직 관리', community:'커뮤니티 관리', applications:'지원 현황', notices:'공지사항 관리', terms:'약관/방침 관리', consent:'동의 이력' };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  
+  // ★ 페이지 진입 시 해당 뱃지 초기화
+  clearUnseen(page);
+  updateAllBadges();
+  
+  if(page==='dashboard') renderDashboard();
+  if(page==='members') renderMembers();
+  if(page==='jobs') renderJobs();
+  if(page==='community') renderPosts();
+  if(page==='applications') renderApplications();
+  if(page==='notices') renderNotices();
+  if(page==='consent') renderConsentLog();
+}
+
+/* ================================================================
+   DASHBOARD
+================================================================ */
+function renderDashboard() {
+  const members = getMembers();
+  const jobs = getData('jobPosts');
+  const drivers = getData('driverPosts');
+  const posts = getData('posts');
+  const dApps = getData('driverApps');
+  const cApps = getData('companyApps');
+  const totalApps = dApps.length + cApps.length;
+
+  document.getElementById('stat-members').textContent = members.length;
+  document.getElementById('stat-jobs').textContent = jobs.length + drivers.length;
+  document.getElementById('stat-posts').textContent = posts.length;
+  document.getElementById('stat-apps').textContent = totalApps;
+
+  // 뱃지는 미확인 수로 표시
+  updateAllBadges();
+
+  // Activity log
+  const log = getLS('admin_activityLog', [
+    { type:'green', text:'관리자 콘솔에 접속했습니다.', time:'방금' }
+  ]);
+  document.getElementById('activity-list').innerHTML = log.slice(0,6).map(a => `
+    <div class="activity-item"><div class="activity-dot ${a.type}"></div><div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time}</div></div></div>
+  `).join('');
+
+  // Popular posts
+  const sorted = [...posts].sort((a,b) => b.likes - a.likes).slice(0,5);
+  document.getElementById('popular-posts').innerHTML = sorted.map((p,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;${i<sorted.length-1?'border-bottom:1px solid var(--border)':''}">
+      <span style="font-size:16px;width:24px;text-align:center;font-weight:700;color:${i<3?'var(--amber)':'var(--text-muted)'}">${i+1}</span>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.title}</div><div style="font-size:10px;color:var(--text-muted)">${p.author}</div></div>
+      <span style="font-size:11px;color:var(--red);font-weight:600">❤️ ${p.likes}</span>
+    </div>
+  `).join('') || '<div style="text-align:center;padding:20px;color:var(--text-muted)">게시글이 없습니다</div>';
+
+  // 월별 통계 화면도 대시보드 렌더 시 갱신
+  initMonthlyStatsFormDefaultMonth();
+  renderMonthlyStatsTable();
+}
+
+/* ================================================================
+  MONTHLY STATS (sharedData/termsData.monthlyStats)
+================================================================ */
+function getMonthlyStatsMap() {
+  const terms = getLS('tc_termsData', {});
+  return terms.monthlyStats || {};
+}
+function aggregateByKey(arr, key, fallback='미입력') {
+  const out = {};
+  (arr||[]).forEach((item) => {
+    const raw = item && item[key];
+    const k = (raw===0 || raw) ? String(raw).trim() : '';
+    const label = k || fallback;
+    out[label] = (out[label] || 0) + 1;
+  });
+  return out;
+}
+function mapToChips(obj) {
+  const keys = Object.keys(obj||{}).sort((a,b)=>(obj[b]||0)-(obj[a]||0));
+  if(!keys.length) return '<span style="font-size:12px;color:var(--text-muted)">데이터 없음</span>';
+  return keys.map(k=>`<span class="badge info" style="margin:0 6px 6px 0">${k}: ${obj[k]}</span>`).join('');
+}
+function initMonthlyStatsFormDefaultMonth() {
+  const m = document.getElementById('ms-month');
+  if(!m || m.value) return;
+  const now = new Date();
+  m.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+function renderMonthlyStatsTable() {
+  const tbody = document.getElementById('monthly-stats-tbody');
+  if(!tbody) return;
+  const map = getMonthlyStatsMap();
+  const months = Object.keys(map).sort((a,b)=>a<b?1:-1);
+  if(months.length===0){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text-muted)">저장된 월별 통계가 없습니다</td></tr>';
+    return;
+  }
+  tbody.innerHTML = months.map(ym => {
+    const s = map[ym] || {};
+    return `<tr onclick="selectMonthlyStats('${ym}')" style="cursor:pointer">
+      <td style="font-family:'JetBrains Mono',monospace">${ym}</td>
+      <td>${s.jobHire||0}</td>
+      <td>${s.jobSeek||0}</td>
+      <td>${s.feedCount||0}</td>
+      <td>${s.userCount||0}</td>
+      <td>${s.visitCount||0}</td>
+      <td>${s.postWriteCount||0}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${s.updatedAt||'-'}</td>
+    </tr>`;
+  }).join('');
+  const selected = document.getElementById('ms-month')?.value || months[0];
+  renderMonthlyStatsDetail(selected);
+}
+function selectMonthlyStats(ym) {
+  const m = document.getElementById('ms-month');
+  if(m) m.value = ym;
+  renderMonthlyStatsDetail(ym);
+}
+function renderMonthlyStatsDetail(ym) {
+  const box = document.getElementById('monthly-stats-detail');
+  if(!box) return;
+  const map = getMonthlyStatsMap();
+  const s = map[ym];
+  if(!s){
+    box.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">월별 통계를 선택하면 상세 집계를 보여줍니다.</div>';
+    return;
+  }
+  const b = s.breakdown || {};
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h4 style="font-size:13px">📊 ${ym} 상세 자동집계</h4>
+      <span style="font-size:11px;color:var(--text-muted)">* 앱에 존재하는 필드 기준 자동집계</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">구인광고 - 택배사별</div>${mapToChips(b.hireByCompany)}</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">구인광고 - 지역별</div>${mapToChips(b.hireByRegion)}</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">구직광고 - 지역별</div>${mapToChips(b.seekByRegion)}</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">구직광고 - 희망근무/차량</div>${mapToChips(b.seekByWorkday)}${mapToChips(b.seekByCar)}</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">구직광고 - 성별/나이</div>${mapToChips(b.seekByGender)}${mapToChips(b.seekByAgeGroup)}</div>
+      <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">사용자/피드</div>${mapToChips(b.usersByRole)}${mapToChips(b.postsByCategory)}</div>
+    </div>
+  `;
+}
+function fillMonthlyStatsFromCurrent() {
+  document.getElementById('ms-job-hire').value = getData('jobPosts').length;
+  document.getElementById('ms-job-seek').value = getData('driverPosts').length;
+  document.getElementById('ms-feed').value = getData('posts').length;
+  document.getElementById('ms-users').value = getMembers().length;
+  document.getElementById('ms-post-writes').value = getData('posts').length;
+  if(!document.getElementById('ms-visits').value) document.getElementById('ms-visits').value = 0;
+  showToast('🧮', '현재 데이터로 자동 채웠습니다');
+}
+function autoAggregateMonthlyStats() {
+  const ym = document.getElementById('ms-month').value;
+  if(!ym) { showToast('⚠️', '기준 월을 선택해주세요'); return; }
+  const jobs = getData('jobPosts');
+  const drivers = getData('driverPosts');
+  const posts = getData('posts');
+  const members = getMembers();
+  const map = getMonthlyStatsMap();
+  const prev = map[ym] || {};
+  map[ym] = {
+    jobHire: jobs.length,
+    jobSeek: drivers.length,
+    feedCount: posts.length,
+    userCount: members.length,
+    visitCount: prev.visitCount || 0,
+    postWriteCount: posts.length,
+    breakdown: {
+      hireByCompany: aggregateByKey(jobs, 'company'),
+      hireByRegion: aggregateByKey(jobs, 'region'),
+      seekByRegion: aggregateByKey(drivers, 'region'),
+      seekByCar: aggregateByKey(drivers, 'car'),
+      seekByWorkday: aggregateByKey(drivers, 'workday'),
+      seekByGender: aggregateByKey(drivers, 'gender'),
+      seekByAgeGroup: aggregateByKey(drivers, 'ageGroup'),
+      usersByRole: aggregateByKey(members, 'role'),
+      postsByCategory: aggregateByKey(posts, 'cat')
+    },
+    updatedAt: new Date().toLocaleString('ko-KR'),
+    updatedBy: (adminUser && (adminUser.email || adminUser.name)) || 'admin'
+  };
+  const terms = getLS('tc_termsData', {});
+  terms.monthlyStats = map;
+  setLS('tc_termsData', terms);
+  syncToFirestore('termsData', terms);
+  addActivity('blue', `<strong>${ym}</strong> 월별 통계를 앱 데이터 기준으로 자동 집계했습니다.`);
+  renderMonthlyStatsTable();
+  renderMonthlyStatsDetail(ym);
+  showToast('✅', `${ym} 상세 통계를 자동 집계/저장했습니다`);
+}
+function saveMonthlyStats() {
+  const ym = document.getElementById('ms-month').value;
+  if(!ym) { showToast('⚠️', '기준 월을 선택해주세요'); return; }
+  const val = (id) => parseInt(document.getElementById(id).value || '0', 10) || 0;
+  const map = getMonthlyStatsMap();
+  map[ym] = {
+    jobHire: val('ms-job-hire'),
+    jobSeek: val('ms-job-seek'),
+    feedCount: val('ms-feed'),
+    userCount: val('ms-users'),
+    visitCount: val('ms-visits'),
+    postWriteCount: val('ms-post-writes'),
+    breakdown: (map[ym] && map[ym].breakdown) || {},
+    updatedAt: new Date().toLocaleString('ko-KR'),
+    updatedBy: (adminUser && (adminUser.email || adminUser.name)) || 'admin'
+  };
+  const terms = getLS('tc_termsData', {});
+  terms.monthlyStats = map;
+  setLS('tc_termsData', terms);
+  syncToFirestore('termsData', terms);
+  addActivity('blue', `<strong>${ym}</strong> 월별 통계를 저장했습니다.`);
+  renderMonthlyStatsTable();
+  renderMonthlyStatsDetail(ym);
+  showToast('✅', `${ym} 통계가 저장되었습니다`);
+}
+
+/* ================================================================
+   MEMBERS (Firestore 기반)
+================================================================ */
+function renderMembers() {
+  const members = getMembers();
+  const filter = document.getElementById('member-role-filter').value;
+  const search = document.getElementById('global-search').value.toLowerCase();
+  const filtered = members.filter(m => {
+    if(filter && m.role !== filter) return false;
+    if(search && !(m.name||'').toLowerCase().includes(search) && !(m.email||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  document.getElementById('member-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">검색 결과가 없습니다</td></tr>'
+    : filtered.map(m => {
+      const isDriver = m.role === '화물기사';
+      const st = m.status === 'suspended' ? 'hidden' : 'active-status';
+      const stText = m.status === 'suspended' ? '정지' : '활성';
+      return `<tr>
+        <td><div class="user-cell"><div class="user-avatar ${isDriver?'av-driver':'av-company'}">${(m.name||'?').charAt(0)}</div><div><div class="user-name">${m.name||'-'}</div><div class="user-email">${m.email||'-'}</div></div></div></td>
+        <td><span class="badge ${isDriver?'driver':'company'}">${m.role||'-'}</span></td>
+        <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px">${m.joined||'-'}</td>
+        <td><span class="badge ${st}">${stText}</span></td>
+        <td style="text-align:right">
+          <button class="btn ${m.status==='suspended'?'btn-success':'btn-warning'} btn-sm" onclick="toggleMemberStatus('${m.uid}')">${m.status==='suspended'?'🔓 활성화':'🔒 정지'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMember('${m.uid}','${m.name||''}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+async function toggleMemberStatus(uid) {
+  const members = getMembers();
+  const m = members.find(x => x.uid === uid); if(!m) return;
+  const newStatus = m.status === 'suspended' ? 'active' : 'suspended';
+  const action = newStatus === 'suspended' ? '정지' : '활성화';
+  showConfirm(`회원 ${action}`, `"${m.name}" 회원을 ${action} 처리하시겠습니까?`, async () => {
+    try {
+      await db.collection('users').doc(uid).update({ status: newStatus });
+      m.status = newStatus;
+      setLS('fs_members', members);
+      addActivity(newStatus==='suspended'?'red':'green', `<strong>${m.name}</strong>님이 ${action} 처리되었습니다.`);
+      showToast('✅', `회원이 ${action} 처리되었습니다`);
+      renderMembers();
+    } catch(e) { console.error(e); showToast('⚠️', '처리 실패'); }
+  });
+}
+
+async function deleteMember(uid, name) {
+  showConfirm('회원 삭제', `"${name}" 회원을 삭제하시겠습니까?`, async () => {
+    try {
+      await db.collection('users').doc(uid).delete();
+      const members = getMembers().filter(m => m.uid !== uid);
+      setLS('fs_members', members);
+      addActivity('red', `<strong>${name}</strong>님이 삭제되었습니다.`);
+      showToast('🗑️', '회원이 삭제되었습니다');
+      renderMembers(); renderDashboard();
+    } catch(e) { console.error(e); showToast('⚠️', '삭제 실패'); }
+  });
+}
+
+/* ================================================================
+   JOBS
+================================================================ */
+function renderJobs() {
+  const jobs = getData('jobPosts');
+  const drivers = getData('driverPosts');
+  const dApps = getData('driverApps');
+  const cApps = getData('companyApps');
+
+  document.getElementById('stat-job-hire').textContent = jobs.length;
+  document.getElementById('stat-job-seek').textContent = drivers.length;
+  document.getElementById('stat-job-pending').textContent = dApps.filter(a=>a.status==='waiting').length + cApps.filter(a=>a.status==='waiting').length;
+
+  document.getElementById('job-tbody').innerHTML = jobs.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">구인 공고가 없습니다</td></tr>'
+    : jobs.map(j => `<tr>
+      <td style="font-weight:600">${j.title}</td><td><span class="badge info">${j.company}</span></td>
+      <td>${j.region}</td><td>${j.car}</td><td style="color:var(--green);font-weight:600">${j.pay}</td>
+      <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteJob(${j.id})">🗑️ 삭제</button></td>
+    </tr>`).join('');
+
+  document.getElementById('driver-tbody').innerHTML = drivers.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">구직 프로필이 없습니다</td></tr>'
+    : drivers.map(d => `<tr>
+      <td><div class="user-cell"><div class="user-avatar av-driver">${(d.name||'?').charAt(0)}</div><span class="user-name">${d.name}</span></div></td>
+      <td>${d.car}</td><td>${d.career}</td><td>${d.region}</td><td style="color:var(--green);font-weight:600">${d.pay}</td>
+      <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteDriver(${d.id})">🗑️ 삭제</button></td>
+    </tr>`).join('');
+}
+
+function deleteJob(id) {
+  showConfirm('공고 삭제', '이 구인 공고를 삭제하시겠습니까?', () => {
+    const jobs = getData('jobPosts').filter(j => j.id !== id);
+    saveData('jobPosts', jobs);
+    addActivity('red', '구인 공고가 삭제되었습니다.');
+    showToast('🗑️', '삭제되었습니다'); renderJobs(); renderDashboard();
+  });
+}
+
+function deleteDriver(id) {
+  showConfirm('프로필 삭제', '이 구직 프로필을 삭제하시겠습니까?', () => {
+    const drivers = getData('driverPosts').filter(d => d.id !== id);
+    saveData('driverPosts', drivers);
+    addActivity('red', '구직 프로필이 삭제되었습니다.');
+    showToast('🗑️', '삭제되었습니다'); renderJobs();
+  });
+}
+
+/* ================================================================
+   COMMUNITY
+================================================================ */
+function renderPosts() {
+  const posts = getData('posts');
+  const catFilter = document.getElementById('post-cat-filter').value;
+  const search = document.getElementById('global-search').value.toLowerCase();
+  const catEmoji = { 정보공유:'📢', 긴급화물:'🚨', 질문:'❓', 자유:'😄', 사고제보:'⚠️' };
+  const filtered = posts.filter(p => {
+    if(catFilter && p.cat !== catFilter) return false;
+    if(search && !p.title.toLowerCase().includes(search) && !p.author.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  document.getElementById('post-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)">게시글이 없습니다</td></tr>'
+    : filtered.map(p => {
+      const st = (p.status||'active')==='hidden' ? 'hidden' : 'active-status';
+      const stText = (p.status||'active')==='hidden' ? '숨김' : '공개';
+      const cmtCount = p.commentList ? p.commentList.length : (p.comments||0);
+      return `<tr>
+        <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:11px">#${p.id}</td>
+        <td><div style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div><div class="post-preview">${p.content}</div></td>
+        <td><span style="font-size:12px">${p.author}</span></td>
+        <td><span class="badge purple-b">${catEmoji[p.cat]||'📝'} ${p.cat}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red)">${p.likes}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${cmtCount}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)">${p.views}</td>
+        <td><span class="badge ${st}">${stText}</span></td>
+        <td style="text-align:right">
+          <button class="btn btn-ghost btn-sm" onclick="viewPost(${p.id})">👁</button>
+          <button class="btn ${(p.status||'active')==='hidden'?'btn-success':'btn-warning'} btn-sm" onclick="togglePostStatus(${p.id})">${(p.status||'active')==='hidden'?'📢':'🔒'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePost(${p.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function viewPost(id) {
+  const p = getData('posts').find(x => x.id === id); if(!p) return;
+  const cmtList = p.commentList || [];
+  document.getElementById('mpd-title').textContent = p.title;
+  document.getElementById('mpd-body').innerHTML = `
+    <div style="margin-bottom:16px"><strong>${p.author}</strong> · ${p.role} · ${p.time}</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:20px;white-space:pre-line">${p.content}</div>
+    <div style="display:flex;gap:16px;margin-bottom:20px;padding:12px;background:var(--bg-input);border-radius:var(--radius-sm)">
+      <span style="font-size:12px;color:var(--red)">❤️ ${p.likes}</span><span style="font-size:12px">💬 ${cmtList.length}</span><span style="font-size:12px;color:var(--text-muted)">👁 ${p.views}</span>
+    </div>
+    <h4 style="font-size:13px;margin-bottom:12px">💬 댓글 (${cmtList.length})</h4>
+    ${cmtList.length===0?'<p style="font-size:12px;color:var(--text-muted)">댓글이 없습니다</p>':cmtList.map(c=>`
+      <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1"><div style="font-size:12px;font-weight:600">${c.author} <span style="color:var(--text-muted);font-size:10px">${c.time}</span></div><div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${c.text}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="deleteComment(${p.id},${c.id})">🗑️</button>
+      </div>
+    `).join('')}`;
+  openModal('post-detail');
+}
+
+function togglePostStatus(id) {
+  const posts = getData('posts');
+  const p = posts.find(x => x.id === id); if(!p) return;
+  p.status = (p.status||'active')==='hidden' ? 'active' : 'hidden';
+  saveData('posts', posts);
+  showToast('✅', `게시글이 ${p.status==='hidden'?'숨김':'공개'} 처리되었습니다`);
+  renderPosts();
+}
+
+function deletePost(id) {
+  showConfirm('게시글 삭제', '이 게시글을 삭제하시겠습니까?', () => {
+    saveData('posts', getData('posts').filter(x => x.id !== id));
+    showToast('🗑️', '삭제되었습니다'); renderPosts(); renderDashboard();
+  });
+}
+
+function deleteComment(postId, commentId) {
+  const posts = getData('posts');
+  const p = posts.find(x => x.id === postId);
+  if(p && p.commentList) {
+    p.commentList = p.commentList.filter(c => c.id !== commentId);
+    saveData('posts', posts);
+    showToast('🗑️', '댓글이 삭제되었습니다');
+    viewPost(postId); renderPosts();
+  }
+}
+
+/* ================================================================
+   APPLICATIONS
+================================================================ */
+function renderApplications() {
+  const dApps = getData('driverApps');
+  const cApps = getData('companyApps');
+  const allApps = [...dApps, ...cApps];
+  const statusFilter = document.getElementById('app-status-filter').value;
+  const filtered = allApps.filter(a => !statusFilter || a.status === statusFilter);
+  const statusMap = { waiting:['⏳ 대기중','waiting'], accepted:['✅ 합격','accepted'], rejected:['❌ 불합격','rejected'] };
+
+  document.getElementById('app-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">지원 내역이 없습니다</td></tr>'
+    : filtered.map(a => {
+      const [stText, stCls] = statusMap[a.status] || ['?',''];
+      return `<tr>
+        <td><div class="user-cell"><div class="user-avatar av-driver">${(a.driverName||'?').charAt(0)}</div><span class="user-name">${a.driverName||'-'}</span></div></td>
+        <td style="font-weight:600">${a.jobTitle||'-'}</td>
+        <td><span class="badge ${stCls}">${stText}</span></td>
+        <td style="text-align:right">
+          ${a.status==='waiting'?`
+            <button class="btn btn-success btn-sm" onclick="updateApp(${a.id},'accepted')">✅ 합격</button>
+            <button class="btn btn-danger btn-sm" onclick="updateApp(${a.id},'rejected')">❌ 불합격</button>
+          `:'<span style="font-size:11px;color:var(--text-muted)">처리완료</span>'}
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function updateApp(id, status) {
+  const statusText = status==='accepted'?'합격':'불합격';
+  showConfirm(`${statusText} 처리`, `이 지원을 ${statusText} 처리하시겠습니까?`, () => {
+    // driverApps에서 찾기
+    const dApps = getData('driverApps');
+    const da = dApps.find(x => x.id === id);
+    if(da) { da.status = status; saveData('driverApps', dApps); }
+    // companyApps에서 찾기
+    const cApps = getData('companyApps');
+    const ca = cApps.find(x => x.id === id);
+    if(ca) { ca.status = status; saveData('companyApps', cApps); }
+    showToast('✅', `${statusText} 처리되었습니다`);
+    renderApplications(); renderDashboard();
+  });
+}
+
+/* ================================================================
+   NOTICES (Firestore 동기화)
+================================================================ */
+function renderNotices() {
+  const notices = getData('notices');
+  document.getElementById('notice-tbody').innerHTML = notices.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">공지사항이 없습니다</td></tr>'
+    : notices.map(n => `<tr>
+      <td style="font-size:20px;text-align:center;width:40px">${n.icon}</td>
+      <td style="font-weight:600">${n.title}</td>
+      <td style="color:var(--text-secondary);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.desc}</td>
+      <td>${n.isNew?'<span class="badge" style="background:var(--red);color:#fff">NEW</span>':'<span style="color:var(--text-muted);font-size:11px">-</span>'}</td>
+      <td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteNotice(${n.id})">🗑️ 삭제</button></td>
+    </tr>`).join('');
+}
+
+function openAddNoticeModal() {
+  document.getElementById('mn-icon').value = '';
+  document.getElementById('mn-title').value = '';
+  document.getElementById('mn-desc').value = '';
+  document.getElementById('mn-new').value = 'true';
+  openModal('notice');
+}
+
+function saveNotice() {
+  const icon = document.getElementById('mn-icon').value.trim() || '📢';
+  const title = document.getElementById('mn-title').value.trim();
+  const desc = document.getElementById('mn-desc').value.trim();
+  const isNew = document.getElementById('mn-new').value === 'true';
+  if(!title) { showToast('⚠️', '제목을 입력해주세요'); return; }
+  const notices = getData('notices');
+  notices.unshift({ id: Date.now(), icon, title, desc, isNew });
+  saveData('notices', notices);
+  closeModal('notice');
+  showToast('✅', '공지사항이 추가되었습니다');
+  renderNotices();
+}
+
+function deleteNotice(id) {
+  showConfirm('공지 삭제', '이 공지사항을 삭제하시겠습니까?', () => {
+    saveData('notices', getData('notices').filter(n => n.id !== id));
+    showToast('🗑️', '삭제되었습니다'); renderNotices();
+  });
+}
+
+/* ================================================================
+   TERMS MANAGEMENT (Firestore 동기화)
+================================================================ */
+let currentEditingTermsType = null;
+const DEFAULT_TERMS_DATA = {
+  terms: '운송 커뮤니티 이용약관\n\n제1조 (목적)\n이 약관은 운송 커뮤니티가 제공하는 모든 서비스의 이용 조건을 규정합니다.\n\n제2조 (정의)\n1. "서비스"란 회사가 제공하는 운송 커뮤니티 관련 모든 서비스를 말합니다.\n2. "회원"이란 서비스에 가입하여 이용하는 자를 말합니다.',
+  privacy: '개인정보 수집·이용 동의서\n\n1. 수집항목: 이름, 이메일, 비밀번호\n2. 수집목적: 회원가입, 서비스 제공\n3. 보유기간: 탈퇴 시까지',
+  marketing: '마케팅 정보 수신 동의 (선택)\n\n1. 수신 정보: 구인공고 알림, 이벤트\n2. 수신 방법: 앱 푸시, 이메일\n3. 동의 거부 시에도 서비스 이용 가능'
+};
+
+function getTermsData() { return getLS('tc_termsData', DEFAULT_TERMS_DATA); }
+
+function editTerms(type) {
+  currentEditingTermsType = type;
+  const data = getTermsData();
+  const content = data[type] || '';
+  const titles = { terms:'📄 이용약관', privacy:'🔐 개인정보처리방침', marketing:'📢 마케팅 수신 동의' };
+  document.getElementById('terms-edit-label').textContent = titles[type] + ' 편집 중';
+  document.getElementById('terms-editor-area').innerHTML = `
+    <div class="form-group"><label>${titles[type]} 내용</label><textarea class="form-input" id="terms-edit-content" style="min-height:350px;line-height:1.8;font-size:13px">${escapeHtml(content)}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="resetTerms('${type}')">🔄 기본값 복원</button>
+      <button class="btn btn-primary" onclick="saveTerms('${type}')">💾 저장</button>
+    </div>`;
+}
+
+function escapeHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function saveTerms(type) {
+  const content = document.getElementById('terms-edit-content').value;
+  const data = getTermsData();
+  data[type] = content;
+  setLS('tc_termsData', data);
+  // Firestore에도 저장
+  syncToFirestore('termsData', data);
+  showToast('✅', '약관이 저장되었습니다');
+}
+
+function resetTerms(type) {
+  showConfirm('기본값 복원', '기본값으로 복원하시겠습니까?', () => {
+    const data = getTermsData();
+    data[type] = DEFAULT_TERMS_DATA[type];
+    setLS('tc_termsData', data);
+    editTerms(type);
+    showToast('🔄', '복원되었습니다');
+  });
+}
+
+/* ================================================================
+   CONSENT LOG (Firestore)
+================================================================ */
+function renderConsentLog() {
+  const log = getLS('tc_consentLog', []);
+  document.getElementById('nav-consent-count').textContent = log.length;
+  const tbody = document.getElementById('consent-tbody');
+  if(log.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">동의 이력이 없습니다</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.map(c => `<tr>
+    <td><div class="user-cell"><div class="user-avatar ${c.role==='화물기사'?'av-driver':'av-company'}">${(c.name||'?').charAt(0)}</div><div><div class="user-name">${c.name}</div><div class="user-email">${c.email}</div></div></div></td>
+    <td><span class="badge ${c.role==='화물기사'?'driver':'company'}">${c.role}</span></td>
+    <td>${c.terms?'<span class="badge accepted">✅ 동의</span>':'<span class="badge rejected">❌</span>'}</td>
+    <td>${c.privacy?'<span class="badge accepted">✅ 동의</span>':'<span class="badge rejected">❌</span>'}</td>
+    <td>${c.marketing?'<span class="badge accepted">✅ 동의</span>':'<span class="badge" style="background:var(--bg-input);color:var(--text-muted)">미동의</span>'}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)">${c.time}</td>
+  </tr>`).join('');
+}
+
+/* ================================================================
+   GLOBAL SEARCH & CLOCK
+================================================================ */
+function handleGlobalSearch() {
+  const currentPage = document.querySelector('.page.active')?.id?.replace('page-','');
+  if(currentPage==='members') renderMembers();
+  else if(currentPage==='community') renderPosts();
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('topbar-time').textContent = `${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()} ${h}:${m}:${s}`;
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+updateClock();
+setInterval(updateClock, 1000);
+
+// 이미 로그인된 상태면 자동 진입
+auth.onAuthStateChanged(async (user) => {
+  if(user) {
+    const doc = await db.collection('users').doc(user.uid).get();
+    const isAdmin = ADMIN_EMAILS.includes(user.email) || (doc.exists && doc.data().isAdmin === true);
+    if(isAdmin) {
+      adminUser = doc.exists ? doc.data() : { name: user.email.split('@')[0], email: user.email };
+      showAdminPanel();
+    }
+  }
+});
+</script>
+</body>
+</html>
