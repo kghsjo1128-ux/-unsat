@@ -7,6 +7,8 @@
 | 항목 | 값 |
 |------|-----|
 | 로컬 경로 | `C:\Users\hohoh\OneDrive\바탕 화면\운사트` |
+| **GitHub 저장소 이름** | **`운사트`** (만들 때 Repository name에 그대로 입력) |
+| GitHub 원격 예시 | [GITHUB-REPO.md](./GITHUB-REPO.md) 참고 |
 | Firebase 프로젝트 ID | `transport-community-c5fc1` |
 | 호스팅 URL | https://transport-community-c5fc1.web.app |
 | 공개 정적 파일 | `public/` |
