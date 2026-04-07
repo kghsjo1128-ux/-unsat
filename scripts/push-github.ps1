@@ -14,7 +14,7 @@ if (-not (Test-Path $git)) { $git = "git" }
 $RepoUrl = "https://github.com/kghsjo1128-ux/%EC%9A%B4%EC%82%AC%ED%8A%B8.git"
 
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
-Set-Location $ProjectRoot
+Set-Location -LiteralPath $ProjectRoot
 if (-not (Test-Path ".git")) {
   Write-Host "오류: .git 이 없습니다. 경로: $ProjectRoot"
   exit 1
@@ -24,8 +24,12 @@ if (-not (Test-Path ".git")) {
 $st = & $git status --porcelain
 if ($st) { & $git commit -m "chore: sync before push" }
 
-& $git remote remove origin 2>$null
-& $git remote add origin $RepoUrl
+$null = & $git remote get-url origin 2>&1
+if ($LASTEXITCODE -eq 0) {
+    & $git remote set-url origin $RepoUrl
+} else {
+    & $git remote add origin $RepoUrl
+}
 & $git branch -M main
 Write-Host "Pushing to: $RepoUrl"
 & $git push -u origin main

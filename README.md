@@ -13,6 +13,14 @@ Firebase Hosting 기반 PWA · Firestore · Storage.
 firebase deploy
 ```
 
+**코드 수정 후 GitHub 반영 + Firebase 재배포를 한 번에** 하려면 프로젝트 폴더에서:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\sync-and-deploy.ps1
+```
+
+커밋 메시지를 직접 쓰려면 `-Message "설명"` 을 붙이면 됩니다. 옵션은 `scripts\sync-and-deploy.ps1` 상단 주석을 참고하세요.
+
 프로젝트·URL·상세 절차는 `DEPLOY-LIST.md`를 참고하세요.
 
 ## GitHub에 푸시 (최초 1회)
@@ -22,7 +30,7 @@ firebase deploy
 2. 터미널 (본인 계정에 맞게 URL만 수정):
 
 ```bash
-cd "C:\Users\hohoh\OneDrive\바탕 화면\운사트"
+cd "C:\Users\hohoh\OneDrive\바탕 화면\앱개발겁나재밌음\운사트"
 git remote add origin <GitHub의 Code에서 복사한 HTTPS 주소>
 git push -u origin main
 ```

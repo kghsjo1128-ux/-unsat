@@ -20,7 +20,7 @@ https://github.com/kghsjo1128-ux/운사트.git
 ## 로컬에서 연결·푸시
 
 ```bash
-cd "C:\Users\hohoh\OneDrive\바탕 화면\운사트"
+cd "C:\Users\hohoh\OneDrive\바탕 화면\앱개발겁나재밌음\운사트"
 git remote add origin https://github.com/kghsjo1128-ux/운사트.git
 git push -u origin main
 ```
