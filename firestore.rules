@@ -4,8 +4,7 @@ rules_version = '2';
 // ★ 관리자 이메일은 public/admin.html 의 ADMIN_EMAILS 와 반드시 동일하게 유지하세요.
 //    (규칙에서 request.auth.token.email 과 비교합니다.)
 //
-// ★ sharedData 는 여전히 "로그인 사용자 누구나" 덮어쓰기 가능합니다.
-//    악용·오류 방지는 Cloud Functions 등 서버 쓰기로 이전하는 것이 이상적입니다.
+// ★ sharedData 쓰기는 관리자만 허용합니다(강화 설정).
 //
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,10 +21,10 @@ service cloud.firestore {
         && request.auth.token.email in adminEmails();
     }
 
-    // 앱 공용 JSON blob — 읽기 공개, 쓰기는 로그인 + 필드 형식·크기 제한
+    // 앱 공용 JSON blob — 읽기 공개, 쓰기는 관리자 + 필드 형식·크기 제한
     match /sharedData/{docId} {
       allow read: if true;
-      allow write: if request.auth != null
+      allow write: if isAdminEmail()
         && request.resource.data.keys().hasAll(['data', 'updatedAt'])
         && request.resource.data.data is string
         && request.resource.data.data.size() < 900000;
