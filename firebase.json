@@ -31,6 +31,20 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/privacy",
+        "destination": "/privacy.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms.html"
+      },
+      {
+        "source": "/account-delete",
+        "destination": "/account-delete.html"
+      }
     ]
   }
 }
