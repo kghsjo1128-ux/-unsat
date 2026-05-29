@@ -23,6 +23,23 @@ powershell -ExecutionPolicy Bypass -File .\scripts\sync-and-deploy.ps1
 
 프로젝트·URL·상세 절차는 `DEPLOY-LIST.md`를 참고하세요.
 
+## Firebase만 배포 (Git 없이)
+
+1. **최초 1회 또는 세션 만료 시** — 터미널에서 Google 로그인:
+   ```powershell
+   cd "C:\Users\hohoh\OneDrive\바탕 화면\app\운사트"
+   firebase login --reauth
+   ```
+2. **배포 실행** (아래 중 하나):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\scripts\deploy-firebase.ps1
+   ```
+   호스팅만: `-HostingOnly` · Functions 제외: `-SkipFunctions`
+
+   또는 `npm run deploy` / `npm run deploy:hosting`
+
+배포 URL: https://transport-community-c5fc1.web.app
+
 ## GitHub에 푸시 (최초 1회)
 
 1. [GitHub → New](https://github.com/new)에서 저장소 **이름을 `운사트`** 로 만든다 (README 추가하지 않기).  
@@ -30,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\sync-and-deploy.ps1
 2. 터미널 (본인 계정에 맞게 URL만 수정):
 
 ```bash
-cd "C:\Users\hohoh\OneDrive\바탕 화면\앱개발겁나재밌음\운사트"
+cd "C:\Users\hohoh\OneDrive\바탕 화면\app\운사트"
 git remote add origin <GitHub의 Code에서 복사한 HTTPS 주소>
 git push -u origin main
 ```

@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.unsat",
+    "sha256_cert_fingerprints": ["C9:02:A0:EF:22:BC:1F:4C:1E:65:2B:62:34:65:70:B2:DA:2D:9E:FE:DA:2D:31:86:96:C8:0B:CD:96:14:23:3A"]
+  }
+}]

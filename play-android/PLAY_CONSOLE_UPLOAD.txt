@@ -1,0 +1,15 @@
+Google Play Console에 올릴 파일
+===========================
+
+AAB (이 파일을 Play Console → 테스트/프로덕션에 업로드):
+  app-release-bundle.aab
+  (이 폴더 루트에 있습니다.)
+
+패키지 이름: com.unsat
+
+서명 키스토어: android.keystore (별도 USB·암호관리자에 백업 필수)
+키 별칭(alias): unsat
+키스토어/키 비밀번호: play-android 폴더의 .play-signing-password 파일 (Git에 안 올라감)
+
+TWA 연결 확인:
+  https://transport-community-c5fc1.web.app/.well-known/assetlinks.json

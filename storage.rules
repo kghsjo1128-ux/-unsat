@@ -1,9 +1,59 @@
 rules_version = '2';
+// 배포: firebase deploy --only storage
+// 업로드·다운로드: Firebase Auth 로그인 사용자만 (커뮤니티 첨부는 작성자 경로만 쓰기)
+// 용량: 프로필 5MB, 이력서 첨부 10MB, 커뮤니티 이미지/영상 30MB
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isImageType(ct) {
+      return ct != null && ct.matches('image/.*');
+    }
+
+    function isVideoType(ct) {
+      return ct != null && (
+        ct.matches('video/.*')
+        || ct == 'application/octet-stream'
+      );
+    }
+
+    // 커뮤니티 게시글 이미지·영상 (기존 경로)
     match /community_posts/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.auth.uid == userId
+        && (
+          (request.resource.size < 30 * 1024 * 1024 && isImageType(request.resource.contentType))
+          || (request.resource.size < 30 * 1024 * 1024 && isVideoType(request.resource.contentType))
+        );
+    }
+
+    // 프로필 이미지 (최대 5MB)
+    match /profile_images/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.size < 5 * 1024 * 1024
+        && isImageType(request.resource.contentType);
+    }
+
+    // 이력서 첨부 (최대 10MB, PDF·이미지)
+    match /resume_attachments/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024
+        && (
+          request.resource.contentType == 'application/pdf'
+          || isImageType(request.resource.contentType)
+        );
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
     }
   }
 }

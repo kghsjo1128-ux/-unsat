@@ -534,6 +534,8 @@ body{background:#f5f5f5;margin:0;padding:0;font-family:Arial;min-height:100vh}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
+<script src="/app-check-site-key.js"></script>
 <!-- Kakao login disabled (Firebase Rules require Firebase Auth) -->
 
 </head>
@@ -735,10 +737,58 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () {});
 const db = firebase.firestore();
 const storage = firebase.storage();
+
+/* App Check: 사이트 키는 /app-check-site-key.js 한 곳에만 입력 */
+(function initAppCheck() {
+  try {
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
+    var k = window.UNSART_RECAPTCHA_SITE_KEY;
+    if (k && k.length > 10) {
+      firebase.appCheck().activate(k, true);
+    } else {
+      console.warn('[운사트] App Check: UNSART_RECAPTCHA_SITE_KEY 가 비어 있으면 콘솔에서 enforcement 시 클라이언트가 차단됩니다.');
+    }
+  } catch (e) {
+    console.warn('App Check 초기화 실패', e);
+  }
+})();
 const AUTO_LOGIN_KEY = 'tc_auto_login_at';
-const AUTO_LOGIN_MS = 24 * 60 * 60 * 1000; // 24시간
+const AUTO_LOGIN_MS = 12 * 60 * 60 * 1000; // 세션: 12시간(브라우저 닫으면 Auth SESSION 만료)
+const LOGIN_THROTTLE_KEY = 'tc_login_fails';
+const LOGIN_THROTTLE_MAX = 8;
+const LOGIN_THROTTLE_WINDOW_MS = 15 * 60 * 1000;
+function recordLoginFailure() {
+  try {
+    var o = JSON.parse(localStorage.getItem(LOGIN_THROTTLE_KEY) || '{}');
+    var t = Date.now();
+    var arr = Array.isArray(o.at) ? o.at.filter(function (x) { return t - x < LOGIN_THROTTLE_WINDOW_MS; }) : [];
+    arr.push(t);
+    localStorage.setItem(LOGIN_THROTTLE_KEY, JSON.stringify({ at: arr }));
+    return arr.length >= LOGIN_THROTTLE_MAX;
+  } catch (e) {
+    return false;
+  }
+}
+function clearLoginFailures() {
+  try {
+    localStorage.removeItem(LOGIN_THROTTLE_KEY);
+  } catch (e) {}
+}
+function isLoginTemporarilyLocked() {
+  try {
+    var o = JSON.parse(localStorage.getItem(LOGIN_THROTTLE_KEY) || '{}');
+    var t = Date.now();
+    var arr = Array.isArray(o.at) ? o.at.filter(function (x) { return t - x < LOGIN_THROTTLE_WINDOW_MS; }) : [];
+    return arr.length >= LOGIN_THROTTLE_MAX;
+  } catch (e) {
+    return false;
+  }
+}
 const LOCAL_WRITE_GUARD_MS = 15000; // 최근 로컬 작성 직후 서버값 덮어쓰기 방지
 const localWriteAt = { posts:0, jobPosts:0, driverPosts:0, driverApps:0, companyApps:0, notices:0 };
 const FIRESTORE_SHARED_JSON_SAFE_BYTES = 900000; // 단일 문서 필드 한도(1MiB) 여유
@@ -942,6 +992,31 @@ async function removeItemFromSharedArrayDoc(docKey,itemId,opts){
   });
 }
 function syncPrivateToFirestore(key, data) { const user = auth.currentUser; if(!user) return; db.collection('users').doc(user.uid).collection('private').doc(key).set({ data: JSON.stringify(data), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.warn('Private sync fail:', err)); }
+async function logPiiFieldAccess(field, action, targetUid) {
+  const u = auth.currentUser;
+  if (!u || !field) return;
+  try {
+    await db.collection('piiAccessLog').add({
+      actorUid: u.uid,
+      action: action || 'read',
+      field: String(field).slice(0, 120),
+      targetUid: targetUid || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.warn('piiAccessLog', err); }
+}
+async function logResumeViewEvent(resumeId, resumeOwnerUid) {
+  const u = auth.currentUser;
+  if (!u || !resumeId || !resumeOwnerUid || u.uid === resumeOwnerUid) return;
+  try {
+    await db.collection('resumeViewLog').add({
+      viewerUid: u.uid,
+      resumeId: String(resumeId).slice(0, 200),
+      resumeOwnerUid: String(resumeOwnerUid).slice(0, 128),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.warn('resumeViewLog', err); }
+}
 
 async function loadSharedDataFromFirestore() { const keys = [{fsKey:'posts',lsKey:'tc_posts'},{fsKey:'jobPosts',lsKey:'tc_jobPosts'},{fsKey:'driverPosts',lsKey:'tc_driverPosts'},{fsKey:'driverApps',lsKey:'tc_driverApps'},{fsKey:'companyApps',lsKey:'tc_companyApps'},{fsKey:'notices',lsKey:'tc_notices'}]; for(const k of keys) { try { const doc = await db.collection('sharedData').doc(k.fsKey).get(); if(doc.exists && doc.data().data) { if(localWriteAt[k.fsKey] && (Date.now()-localWriteAt[k.fsKey] < LOCAL_WRITE_GUARD_MS)) continue; setLS(k.lsKey, JSON.parse(doc.data().data)); } } catch(err) { console.warn('Load fail:', err); } } }
 async function loadPrivateDataFromFirestore(uid) { const keys = [{fsKey:'notifications',lsKey:'tc_notifications'},{fsKey:'dayRecords',lsKey:'tc_dayRecords'},{fsKey:'likedPosts',lsKey:'tc_likedPosts'}]; for(const k of keys) { try { const doc = await db.collection('users').doc(uid).collection('private').doc(k.fsKey).get(); if(doc.exists && doc.data().data) setLS(k.lsKey, JSON.parse(doc.data().data)); } catch(err) {} } likedPosts = getLikedPosts(); }
@@ -1079,9 +1154,9 @@ function isStrongPassword(pw){
   return hasUpper && hasLower && hasDigit && hasSpecial;
 }
 
-async function doRegister(){hideAllErrors();const name=$('reg-name').value.trim(),email=$('reg-email').value.trim(),pw=$('reg-pw').value,pw2=$('reg-pw2').value;let v=true;if(!name){$('reg-name-err').style.display='block';v=false;}if(!email){$('reg-email-err').style.display='block';v=false;}if(!isStrongPassword(pw)){$('reg-pw-err').style.display='block';v=false;}if(pw!==pw2){$('reg-pw2-err').style.display='block';v=false;}if(!$('consent-terms').checked||!$('consent-privacy').checked){$('reg-consent-err').style.display='block';v=false;}if(!v)return;const btn=$('btn-register');btn.disabled=true;btn.textContent='가입 중...';try{const cred=await auth.createUserWithEmailAndPassword(email,pw);const now=new Date();const joinDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const userData={name,email,role:selectedRole,status:'active',joined:joinDate,uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);await db.collection('consentLog').add({email,name,role:selectedRole,terms:true,privacy:true,marketing:$('consent-marketing').checked,time:joinDate+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),uid:cred.user.uid});currentUser=userData;setLoginSession();showSuccess('🎉',name+'님 가입 완료!','운사트의 새 멤버가 되셨어요!');}catch(err){if(err.code==='auth/email-already-in-use')$('reg-dup-err').style.display='block';else if(err.code==='auth/invalid-email'){$('reg-email-err').textContent='올바른 이메일을 입력해주세요';$('reg-email-err').style.display='block';}else if(err.code==='auth/weak-password'){$('reg-pw-err').textContent='비밀번호가 너무 약해요';$('reg-pw-err').style.display='block';}else showToast('⚠️ 회원가입 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='가입하기';}}
+async function doRegister(){hideAllErrors();const name=$('reg-name').value.trim(),email=$('reg-email').value.trim(),pw=$('reg-pw').value,pw2=$('reg-pw2').value;let v=true;if(!name){$('reg-name-err').style.display='block';v=false;}if(!email){$('reg-email-err').style.display='block';v=false;}if(!isStrongPassword(pw)){$('reg-pw-err').style.display='block';v=false;}if(pw!==pw2){$('reg-pw2-err').style.display='block';v=false;}if(!$('consent-terms').checked||!$('consent-privacy').checked){$('reg-consent-err').style.display='block';v=false;}if(!v)return;const btn=$('btn-register');btn.disabled=true;btn.textContent='가입 중...';try{const cred=await auth.createUserWithEmailAndPassword(email,pw);try{await cred.user.sendEmailVerification();}catch(eV){console.warn('sendEmailVerification',eV);}const now=new Date();const joinDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const userData={name,email,role:selectedRole,status:'active',joined:joinDate,uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);await db.collection('consentLog').add({email,name,role:selectedRole,terms:true,privacy:true,marketing:$('consent-marketing').checked,time:joinDate+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),uid:cred.user.uid});currentUser=userData;setLoginSession();showSuccess('🎉',name+'님 가입 완료!','가입한 이메일로 인증 링크를 보냈어요. 인증 후 커뮤니티·구인글 작성이 가능합니다.');}catch(err){if(err.code==='auth/email-already-in-use')$('reg-dup-err').style.display='block';else if(err.code==='auth/invalid-email'){$('reg-email-err').textContent='올바른 이메일을 입력해주세요';$('reg-email-err').style.display='block';}else if(err.code==='auth/weak-password'){$('reg-pw-err').textContent='비밀번호가 너무 약해요';$('reg-pw-err').style.display='block';}else showToast('⚠️ 회원가입 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='가입하기';}}
 
-async function doLogin(){hideAllErrors();const id=$('login-id').value.trim(),pw=$('login-pw').value;let v=true;if(!id){$('login-id-err').style.display='block';v=false;}if(!pw){$('login-pw-err').style.display='block';v=false;}if(!v)return;const btn=$('btn-login');btn.disabled=true;btn.textContent='로그인 중...';try{const cred=await auth.signInWithEmailAndPassword(id,pw);const doc=await db.collection('users').doc(cred.user.uid).get();if(doc.exists){currentUser=doc.data();if(currentUser.status==='suspended'){await auth.signOut();clearLoginSession();showToast('⚠️ 관리자에 의해 계정이 정지되었습니다');currentUser=null;return;}setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}else{const userData={name:cred.user.email.split('@')[0],email:cred.user.email,role:'화물기사',status:'active',joined:new Date().toISOString().slice(0,10),uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);currentUser=userData;setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}}catch(err){if(err.code==='auth/user-not-found'||err.code==='auth/wrong-password'||err.code==='auth/invalid-credential')$('login-fail-err').style.display='block';else showToast('⚠️ 로그인 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='로그인';}}
+async function doLogin(){hideAllErrors();const id=$('login-id').value.trim(),pw=$('login-pw').value;let v=true;if(!id){$('login-id-err').style.display='block';v=false;}if(!pw){$('login-pw-err').style.display='block';v=false;}if(!v)return;if(isLoginTemporarilyLocked()){showToast('⚠️ 로그인 시도가 너무 많아요. 15분 후 다시 시도해 주세요.');return;}const btn=$('btn-login');btn.disabled=true;btn.textContent='로그인 중...';try{const cred=await auth.signInWithEmailAndPassword(id,pw);const prov=(cred.user.providerData&&cred.user.providerData[0]&&cred.user.providerData[0].providerId)||'';if(prov==='password'&&!cred.user.emailVerified){try{await cred.user.sendEmailVerification();}catch(eV){}await auth.signOut();clearLoginSession();showToast('📧 이메일 인증 후 로그인할 수 있어요. 메일함의 링크를 확인해 주세요.');return;}const doc=await db.collection('users').doc(cred.user.uid).get();if(doc.exists){currentUser=doc.data();if(currentUser.status==='suspended'){await auth.signOut();clearLoginSession();showToast('⚠️ 관리자에 의해 계정이 정지되었습니다');currentUser=null;return;}clearLoginFailures();setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}else{const userData={name:cred.user.email.split('@')[0],email:cred.user.email,role:'화물기사',status:'active',joined:new Date().toISOString().slice(0,10),uid:cred.user.uid};await db.collection('users').doc(cred.user.uid).set(userData);currentUser=userData;clearLoginFailures();setLoginSession();showSuccess('🚛',currentUser.name+'님 환영합니다!','오늘도 안전 운행하세요!');}}catch(err){if(err.code==='auth/user-not-found'||err.code==='auth/wrong-password'||err.code==='auth/invalid-credential'){if(recordLoginFailure())showToast('⚠️ 여러 번 틀렸어요. 잠시 후 다시 시도해 주세요.');$('login-fail-err').style.display='block';}else showToast('⚠️ 로그인 실패: '+err.message);}finally{btn.disabled=false;btn.textContent='로그인';}}
 
 async function googleLogin(){try{const provider=new firebase.auth.GoogleAuthProvider();const result=await auth.signInWithPopup(provider);const user=result.user;const doc=await db.collection('users').doc(user.uid).get();if(doc.exists){currentUser=doc.data();}else{const userData={name:user.displayName||user.email.split('@')[0],email:user.email,role:'화물기사',status:'active',joined:new Date().toISOString().slice(0,10),uid:user.uid,provider:'google'};await db.collection('users').doc(user.uid).set(userData);currentUser=userData;}setLoginSession();showSuccess('🔵',currentUser.name+'님 환영합니다!','Google로 로그인했어요!');}catch(err){if(err.code!=='auth/popup-closed-by-user')showToast('⚠️ Google 로그인 실패');}}
 
@@ -1092,7 +1167,7 @@ async function changePassword(){const cur=$('pw-current').value,nw=$('pw-new').v
 
 async function doLogout(){try{await auth.signOut();}catch(e){}clearLoginSession();currentUser=null;$('screen-app').classList.remove('active');$('screen-login').classList.add('active');$('login-id').value='';$('login-pw').value='';$('success-inner').style.display='none';document.querySelector('.login-form').style.display='block';switchTab('login');}
 
-async function doWithdraw(){if(!currentUser)return;try{const user=auth.currentUser;if(user){await db.collection('users').doc(user.uid).delete();await user.delete();}clearLoginSession();closeModal('withdraw');currentUser=null;$('screen-app').classList.remove('active');$('screen-login').classList.add('active');$('login-id').value='';$('login-pw').value='';$('success-inner').style.display='none';document.querySelector('.login-form').style.display='block';switchTab('login');showToast('👋 탈퇴가 완료되었어요');}catch(err){showToast('⚠️ 탈퇴 처리 중 오류가 발생했어요. 다시 시도해주세요.');}}
+async function doWithdraw(){if(!currentUser)return;try{const user=auth.currentUser;if(user){const uid=user.uid;var privSnap=await db.collection('users').doc(uid).collection('private').get();var consents=await db.collection('consentLog').where('uid','==',uid).get();var batch=db.batch();privSnap.forEach(function(d){batch.delete(d.ref);});consents.forEach(function(d){batch.delete(d.ref);});batch.delete(db.collection('users').doc(uid));await batch.commit();await user.delete();}clearLoginSession();closeModal('withdraw');currentUser=null;$('screen-app').classList.remove('active');$('screen-login').classList.add('active');$('login-id').value='';$('login-pw').value='';$('success-inner').style.display='none';document.querySelector('.login-form').style.display='block';switchTab('login');showToast('👋 탈퇴가 완료되었어요');}catch(err){showToast('⚠️ 탈퇴 처리 중 오류가 발생했어요. 다시 시도해주세요.');}}
 
 /* ★★★ 카카오 로그인(비활성) ★★★
    - 현재 Firestore Rules는 Firebase Auth 기반으로 잠겨있어서
@@ -1142,7 +1217,7 @@ function renderJobList(){const jobs=getJobPosts().filter(j=>(j.status||'active')
 function renderCompanyMyJobs(){const box=$('company-my-job-list');if(!box||!currentUser||currentUser.role!=='운송회사'){if(box)box.innerHTML='';return;}const mine=getMyCompanyJobPosts();if(!mine.length){box.innerHTML='<div class="company-my-jobs-empty">등록한 구인 공고가 없어요. 내정보 → 📢 구인 공고 등록하기</div>';return;}box.innerHTML=mine.map(j=>`<div class="job-item job-item-mine" onclick="openJobDetail(${j.id})"><div class="job-top"><span class="job-title-text">${j.title}</span><div class="job-badges"><span class="job-badge type-hire">내 공고</span><span class="job-badge company">${j.company}</span></div></div><p class="job-info">📍 ${j.region} · ${j.workday}</p><p class="job-info">🚛 ${j.car} | ${j.career}</p><p class="job-pay">💰 ${j.pay}</p><p class="tap-hint">탭하여 상세보기 →</p></div>`).join('');}
 function renderDriverList(){const drivers=getDriverPosts().filter(d=>(d.status||'active')==='active');const search=$('c-search')?.value.toLowerCase()||'';const region=$('c-filter-region')?.value||'';const car=$('c-filter-car')?.value||'';const filtered=drivers.filter(d=>{if(region&&d.region!==region)return false;if(car&&!d.car.includes(car))return false;if(search&&!d.name.toLowerCase().includes(search)&&!d.car.toLowerCase().includes(search))return false;return true;});$('c-result-count').textContent=filtered.length;$('c-no-result').style.display=filtered.length===0?'block':'none';$('company-driver-list').innerHTML=filtered.map(d=>`<div class="driver-card" onclick="openDriverDetail(${d.id})"><div class="driver-top"><div class="driver-avatar">🚛</div><div><div class="driver-name">${d.name}</div><div class="driver-career">${d.career} | ${d.car}</div></div><span class="driver-badge">구직중</span></div><div class="driver-tags"><span class="driver-tag">📍 ${d.region}</span><span class="driver-tag">🚛 ${d.car}</span><span class="driver-tag">${d.workday}</span></div><div class="driver-pay">💰 ${d.pay} 희망</div><p class="tap-hint">탭하여 상세보기 →</p></div>`).join('');}
 function filterDriver(){renderJobList()}function filterCompany(){renderDriverList()}
-function openJobDetail(id){const j=getJobPosts().find(x=>String(x.id)===String(id));if(!j)return;currentJobId=j.id;$('dj-company').textContent=j.company;$('dj-title').textContent=j.title;$('dj-pay').textContent='💰 '+j.pay;$('dj-region').textContent=j.region;$('dj-car').textContent=j.car;$('dj-career').textContent=j.career;$('dj-workday').textContent=j.workday;$('dj-salary').textContent=j.pay;$('dj-desc').textContent=j.desc;$('dj-companyname').textContent=j.companyname;$('dj-contact').textContent=j.contact;const applied=getDriverApps().some(a=>String(a.jobId)===String(j.id));const btn=$('btn-apply-job');btn.textContent=applied?'✅ 이미 지원했어요':'🙋 지원하기';btn.style.opacity=applied?'0.6':'1';btn.onclick=applied?()=>showToast('⚠️ 이미 지원한 공고예요'):applyJob;$('detail-job').classList.add('active');}
+function openJobDetail(id){const j=getJobPosts().find(x=>String(x.id)===String(id));if(!j)return;currentJobId=j.id;$('dj-company').textContent=j.company;$('dj-title').textContent=j.title;$('dj-pay').textContent='💰 '+j.pay;$('dj-region').textContent=j.region;$('dj-car').textContent=j.car;$('dj-career').textContent=j.career;$('dj-workday').textContent=j.workday;$('dj-salary').textContent=j.pay;$('dj-desc').textContent=j.desc;$('dj-companyname').textContent=j.companyname;$('dj-contact').textContent=j.contact;logPiiFieldAccess('job.contact','read',null);const applied=getDriverApps().some(a=>String(a.jobId)===String(j.id));const btn=$('btn-apply-job');btn.textContent=applied?'✅ 이미 지원했어요':'🙋 지원하기';btn.style.opacity=applied?'0.6':'1';btn.onclick=applied?()=>showToast('⚠️ 이미 지원한 공고예요'):applyJob;$('detail-job').classList.add('active');}
 function openDriverDetail(id){const d=getDriverPosts().find(x=>x.id===id);if(!d)return;currentDriverId=d.id;$('dd-name').textContent=d.name;$('dd-sub').textContent=d.career+' | '+d.car;$('dd-car').textContent=d.car;$('dd-career').textContent=d.career;$('dd-region').textContent=d.region;$('dd-workday').textContent=d.workday;$('dd-pay').textContent=d.pay;$('dd-intro').textContent=d.intro;$('detail-driver').classList.add('active');}
 function closeDetail(type){$('detail-'+type).classList.remove('active')}
 
@@ -1419,13 +1494,19 @@ function selectRole(el,role){document.querySelectorAll('.role-btn').forEach(b=>b
 function hideAllErrors(){document.querySelectorAll('.error').forEach(e=>e.style.display='none');}
 function showSuccess(icon,title,desc){document.querySelector('.login-form').style.display='none';document.querySelector('.register-form').style.display='none';document.querySelector('.tabs').style.display='none';$('success-inner').style.display='block';$('success-icon').textContent=icon;$('success-title').textContent=title;$('success-desc').textContent=desc;}
 
-async function goToApp(){if(!currentUser)return;$('screen-login').classList.remove('active');$('screen-app').classList.add('active');$('header-name').textContent=currentUser.name+'님';$('header-role').textContent=currentUser.role;$('profile-name').textContent=currentUser.name;$('profile-email').textContent=currentUser.email;$('profile-role').textContent=currentUser.role;const av=$('profile-avatar');const savedImg=localStorage.getItem('avatar_img');if(savedImg){av.innerHTML=`<img src="${savedImg}"><span class="avatar-edit-hint">사진변경</span>`;}else{av.innerHTML=(currentUser.role==='운송회사'?'🏢':'🚛')+`<span class="avatar-edit-hint">사진변경</span>`;}$('btn-driver-action').style.display=currentUser.role==='화물기사'?'flex':'none';$('btn-company-action').style.display=currentUser.role==='운송회사'?'flex':'none';showToast('📡 데이터 불러오는 중...');try{await loadSharedDataFromFirestore();if(currentUser.uid)await loadPrivateDataFromFirestore(currentUser.uid);likedPosts=getLikedPosts();}catch(err){}mergeExampleJobPostsOnce();setupRealtimeListeners();startSharedDataAutoRefresh();renderCal();updateMonthlySummary();renderPosts();updateApplyBadge();updateBellDot();updateActivityBadge();renderHomeNotifications();renderHomeFeed();goPage('home');localStorage.removeItem('notice_hide_until');showNoticePopup();}
+async function goToApp(){if(!currentUser)return;var _au=auth.currentUser;var _pv=_au&&_au.providerData&&_au.providerData[0]&&_au.providerData[0].providerId;if(_pv==='password'&&_au&&!_au.emailVerified){showToast('📧 이메일 인증을 마치면 글·구인 공고 작성이 가능해요');}$('screen-login').classList.remove('active');$('screen-app').classList.add('active');$('header-name').textContent=currentUser.name+'님';$('header-role').textContent=currentUser.role;$('profile-name').textContent=currentUser.name;$('profile-email').textContent=currentUser.email;$('profile-role').textContent=currentUser.role;const av=$('profile-avatar');const savedImg=localStorage.getItem('avatar_img');if(savedImg){av.innerHTML=`<img src="${savedImg}"><span class="avatar-edit-hint">사진변경</span>`;}else{av.innerHTML=(currentUser.role==='운송회사'?'🏢':'🚛')+`<span class="avatar-edit-hint">사진변경</span>`;}$('btn-driver-action').style.display=currentUser.role==='화물기사'?'flex':'none';$('btn-company-action').style.display=currentUser.role==='운송회사'?'flex':'none';showToast('📡 데이터 불러오는 중...');try{await loadSharedDataFromFirestore();if(currentUser.uid)await loadPrivateDataFromFirestore(currentUser.uid);likedPosts=getLikedPosts();}catch(err){}mergeExampleJobPostsOnce();setupRealtimeListeners();startSharedDataAutoRefresh();renderCal();updateMonthlySummary();renderPosts();updateApplyBadge();updateBellDot();updateActivityBadge();renderHomeNotifications();renderHomeFeed();goPage('home');localStorage.removeItem('notice_hide_until');showNoticePopup();}
 async function tryAutoLogin(){
   try{
     const user = await new Promise(resolve => {
       const unsub = auth.onAuthStateChanged((u) => { unsub(); resolve(u); });
     });
     if(!user) return false;
+    var prov=(user.providerData&&user.providerData[0]&&user.providerData[0].providerId)||'';
+    if(prov==='password'&&!user.emailVerified){
+      await auth.signOut();
+      clearLoginSession();
+      return false;
+    }
     if(!isLoginSessionValid()){
       await auth.signOut();
       clearLoginSession();

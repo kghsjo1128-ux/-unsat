@@ -1,80 +1,327 @@
 rules_version = '2';
 // 배포: firebase deploy --only firestore:rules
 //
-// ★ 관리자 이메일은 public/admin.html 의 ADMIN_EMAILS 와 반드시 동일하게 유지하세요.
-//    (규칙에서 request.auth.token.email 과 비교합니다.)
+// ★ 관리자: Firebase Auth Custom Claim { admin: true } 만 인정합니다.
+//   최초 1회: functions 폴더에서 `node grantAdmin.js <관리자이메일>` (서비스 계정 필요)
 //
-// ★ sharedData 쓰기는 관리자만 허용합니다(강화 설정).
+// ★ 현재 앱은 게시글·구인 등을 sharedData/{키} JSON 으로 동기화합니다.
+//   문서 단위 작성자 통제는 posts/{id} 등 분리 스키마로 마이그레이션 시 규칙이 완전히 적용됩니다.
+//
+// ★ App Check: 콘솔에서 Firestore/Functions/Auth 에 enforcement 켠 뒤,
+//   클라이언트에서 App Check SDK 를 반드시 초기화하세요(웹: reCAPTCHA v3).
 //
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function adminEmails() {
-      return [
-        'hohohorhrh@naver.com',
-      ];
-    }
-
-    function isAdminEmail() {
-      return request.auth != null
-        && request.auth.token.email != null
-        && request.auth.token.email in adminEmails();
-    }
-
-    // users/{uid}.isAdmin=true 인 계정도 관리자 권한으로 허용
-    function isAdminByUserDoc() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    /* ---------- 공통 함수 ---------- */
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     function isAdmin() {
-      return isAdminEmail() || isAdminByUserDoc();
+      return isSignedIn() && request.auth.token.admin == true;
     }
 
-    // 앱 공용 JSON blob — 읽기 공개, 쓰기는 관리자 + 필드 형식·크기 제한
-    match /sharedData/{docId} {
-      allow read: if true;
-      allow write: if isAdmin()
-        && request.resource.data.keys().hasAll(['data', 'updatedAt'])
+    // 이메일/비밀번호 가입자는 이메일 인증 완료 후에만 "민감 쓰기" 허용
+    function hasVerifiedIdentity() {
+      return isSignedIn() && (
+        request.auth.token.firebase.sign_in_provider != 'password'
+        || request.auth.token.email_verified == true
+      );
+    }
+
+    function bannedSensitiveKeys() {
+      return [
+        '주민등록번호', 'residentRegistrationNumber', 'rrn', 'rrnHash',
+        '계좌번호', 'accountNumber', 'bankAccount', 'bankAccountNumber',
+        'cardNumber', 'creditCard', 'passportNumber', 'driverLicenseNumber'
+      ];
+    }
+
+    function hasNoBannedSensitiveKeys(data) {
+      return !data.keys().hasAny(bannedSensitiveKeys());
+    }
+
+    function validSharedDataWrite() {
+      return request.resource.data.keys().hasOnly(['data', 'updatedAt'])
         && request.resource.data.data is string
-        && request.resource.data.data.size() < 900000;
+        && request.resource.data.data.size() > 0
+        && request.resource.data.data.size() < 900000
+        && request.resource.data.updatedAt == request.time;
     }
 
-    // 회원 프로필 — 본인 또는 관리자(이메일 화이트리스트)만
+    function sharedDataCommunityDocIds() {
+      return [
+        'posts', 'jobPosts', 'driverPosts', 'driverApps',
+        'companyApps', 'notices'
+      ];
+    }
+
+    function isEmployerRole() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == '운송회사';
+    }
+
+    /* ---------- sharedData (기존 앱 동기화) ---------- */
+    match /sharedData/{docId} {
+      // 약관 JSON 등: 공개 읽기. 커뮤니티·구인 데이터: 로그인 사용자만 읽기
+      allow read: if docId == 'termsData'
+        || (isSignedIn() && docId in sharedDataCommunityDocIds());
+
+      allow create, update, delete: if validSharedDataWrite()
+        && (
+          (isAdmin())
+          || (hasVerifiedIdentity() && docId in sharedDataCommunityDocIds())
+        );
+    }
+
+    /* ---------- users ---------- */
     match /users/{userId} {
-      allow get: if (request.auth != null && request.auth.uid == userId)
-        || isAdmin();
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow list: if isAdmin();
 
-      // 가입 시: 본인 문서만, isAdmin 필드 없이 생성
-      allow create: if request.auth != null
+      allow create: if isSignedIn()
         && request.auth.uid == userId
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll(['name', 'email', 'role', 'status', 'joined', 'uid'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() < 120
+        && request.resource.data.email is string
+        && request.resource.data.role is string
+        && request.resource.data.status == 'active'
+        && request.resource.data.joined is string
+        && request.resource.data.uid == userId
         && !request.resource.data.keys().hasAny(['isAdmin']);
 
-      // 본인: 이름만 변경 가능, isAdmin 불변
-      // 관리자: 전체 수정(정지·isAdmin 등)
       allow update: if isAdmin()
-        || (request.auth != null
-            && request.auth.uid == userId
-            && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
-           );
+        || (
+          isSignedIn()
+          && request.auth.uid == userId
+          && hasVerifiedIdentity()
+          && hasNoBannedSensitiveKeys(request.resource.data)
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+        );
 
-      allow delete: if (request.auth != null && request.auth.uid == userId)
+      allow delete: if (isSignedIn() && request.auth.uid == userId && hasVerifiedIdentity())
         || isAdmin();
     }
 
     match /users/{userId}/private/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 1200000
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // 동의 로그: 본인 생성만, 열람은 관리자만 (일반 유저 간 개인정보 노출 방지)
+    /* ---------- consentLog ---------- */
     match /consentLog/{id} {
-      allow create: if request.auth != null;
       allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll([
+          'email', 'name', 'role', 'terms', 'privacy', 'marketing', 'time', 'uid'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.name is string
+        && request.resource.data.role is string
+        && request.resource.data.terms == true
+        && request.resource.data.privacy == true
+        && request.resource.data.marketing is bool
+        && request.resource.data.time is string;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    /* ---------- 커뮤니티: posts (문서 단위, 마이그레이션 대비) ---------- */
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if hasVerifiedIdentity()
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll(['authorUid', 'title', 'content', 'createdAt'])
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorUid is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() < 500
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() < 50000
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if hasVerifiedIdentity()
+        && resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorUid == resource.data.authorUid
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['title', 'content', 'updatedAt', 'status', 'imgs', 'likes', 'comments', 'views']);
+
+      allow delete: if hasVerifiedIdentity()
+        && resource.data.authorUid == request.auth.uid;
+    }
+
+    /* ---------- comments (루트 컬렉션) ---------- */
+    match /comments/{commentId} {
+      allow read: if isSignedIn();
+      allow create: if hasVerifiedIdentity()
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll(['authorUid', 'postId', 'text', 'createdAt'])
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.postId is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() < 10000
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if hasVerifiedIdentity()
+        && resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorUid == resource.data.authorUid
+        && request.resource.data.postId == resource.data.postId
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() < 10000
+        && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'updatedAt'])
+        );
+
+      allow delete: if hasVerifiedIdentity()
+        && resource.data.authorUid == request.auth.uid;
+    }
+
+    /* ---------- chats / messages ---------- */
+    match /chats/{chatId} {
+      allow read: if isSignedIn()
+        && resource.data.keys().hasAll(['members'])
+        && resource.data.members is list
+        && request.auth.uid in resource.data.members;
+
+      allow create: if hasVerifiedIdentity()
+        && request.resource.data.keys().hasAll(['members', 'createdAt'])
+        && request.resource.data.members is list
+        && request.resource.data.members.size() >= 2
+        && request.resource.data.members.size() <= 50
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isSignedIn()
+        && resource.data.members is list
+        && request.auth.uid in resource.data.members
+        && request.resource.data.members is list
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.members.size() <= 50;
+
+      allow delete: if isAdmin()
+        || (isSignedIn()
+            && resource.data.members is list
+            && request.auth.uid in resource.data.members);
+    }
+
+    match /chats/{chatId}/messages/{messageId} {
+      allow read: if isSignedIn()
+        && exists(/databases/$(database)/documents/chats/$(chatId))
+        && get(/databases/$(database)/documents/chats/$(chatId)).data.members is list
+        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+
+      allow create: if hasVerifiedIdentity()
+        && exists(/databases/$(database)/documents/chats/$(chatId))
+        && get(/databases/$(database)/documents/chats/$(chatId)).data.members is list
+        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
+        && request.resource.data.keys().hasAll(['senderUid', 'text', 'createdAt'])
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() < 20000
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if hasVerifiedIdentity()
+        && exists(/databases/$(database)/documents/chats/$(chatId))
+        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
+        && resource.data.senderUid == request.auth.uid;
+    }
+
+    /* ---------- jobs (구인) ---------- */
+    match /jobs/{jobId} {
+      allow read: if isSignedIn();
+      allow create: if hasVerifiedIdentity()
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll(['ownerUid', 'title', 'createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if hasVerifiedIdentity()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && hasNoBannedSensitiveKeys(request.resource.data);
+
+      allow delete: if hasVerifiedIdentity()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    /* ---------- resumes (구직/이력서) ---------- */
+    match /resumes/{resumeId} {
+      allow read: if (isSignedIn() && resource.data.ownerUid == request.auth.uid)
+        || (
+          isSignedIn()
+          && resource.data.get('allowPublicToEmployers', false) == true
+          && resource.data.ownerUid is string
+          && isEmployerRole()
+        );
+
+      allow create: if hasVerifiedIdentity()
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.keys().hasAll(['ownerUid', 'updatedAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time
+        && (!request.resource.data.keys().hasAny(['allowPublicToEmployers'])
+          || request.resource.data.allowPublicToEmployers is bool);
+
+      allow update: if hasVerifiedIdentity()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && hasNoBannedSensitiveKeys(request.resource.data)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if hasVerifiedIdentity()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    /* ---------- 감사·열람 로그 (클라이언트 또는 Functions 에서 기록) ---------- */
+    match /piiAccessLog/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['actorUid', 'action', 'field', 'createdAt'])
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.action is string
+        && request.resource.data.field is string
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
 
+    match /resumeViewLog/{id} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.resumeOwnerUid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['viewerUid', 'resumeId', 'resumeOwnerUid', 'createdAt'])
+        && request.resource.data.viewerUid == request.auth.uid
+        && request.resource.data.resumeId is string
+        && request.resource.data.resumeOwnerUid is string
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    /* ---------- 기본 거부 ---------- */
     match /{document=**} {
       allow read, write: if false;
     }

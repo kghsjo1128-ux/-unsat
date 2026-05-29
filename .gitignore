@@ -71,5 +71,22 @@ node_modules/
 # dotenv environment variables file
 .env
 
+# Play / TWA 서명·빌드 산출물 (키스토어는 반드시 별도 안전 백업)
+play-android/android.keystore
+play-android/android.keystore.bak
+play-android/*.aab
+play-android/app-release-*.apk
+play-android/.play-signing-password
+play-android/.play-signing-password.bak
+play-android/keystore.properties
+play-android/local.properties
+play-android/.gradle
+play-android/build/
+play-android/app/build/
+
+# Firebase 서비스 계정·로컬 키 (절대 GitHub에 올리지 않음)
+키/
+*-firebase-adminsdk-*.json
+
 # dataconnect generated files
 .dataconnect

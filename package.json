@@ -1,0 +1,18 @@
+{
+  "name": "unsat-transport-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "firebase deploy --project transport-community-c5fc1",
+    "deploy:hosting": "firebase deploy --only hosting --project transport-community-c5fc1",
+    "deploy:rules": "firebase deploy --only firestore,storage --project transport-community-c5fc1",
+    "play:generate": "node scripts/generate-play-android.mjs",
+    "play:gradle": "powershell -NoProfile -Command \"$env:JAVA_HOME='C:\\Program Files\\Android\\Android Studio\\jbr'; $env:ANDROID_HOME=$env:LOCALAPPDATA+'\\Android\\Sdk'; Set-Location play-android; .\\gradlew.bat --no-daemon bundleRelease; Copy-Item app\\build\\outputs\\bundle\\release\\app-release.aab app-release-bundle.aab -Force\"",
+    "play:build": "bubblewrap build --directory play-android",
+    "play:update": "bubblewrap update --directory play-android",
+    "play:fingerprint": "bubblewrap fingerprint --directory play-android"
+  },
+  "devDependencies": {
+    "@bubblewrap/cli": "^1.24.1"
+  }
+}
